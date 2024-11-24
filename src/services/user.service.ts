@@ -10,12 +10,12 @@ class UserService{
     constructor(
         private readonly userRepo= AppDataSource.getRepository(User)
     ){}
-    async register(data:any){
-        if(!data.fullname)throw HttpException.badRequest(`Fullname is required.`)
-        if(!data.email)throw HttpException.badRequest(`Email is required`)
-        if(!data.password) throw HttpException.badRequest('Password is required')
+    async register(username:string,email:string,password:string){
+        if(!username)throw HttpException.badRequest(`Fullname is required.`)
+        if(!email)throw HttpException.badRequest(`Email is required`)
+        if(!password) throw HttpException.badRequest('Password is required')
         const userEmailExists=await this.userRepo.findOne({
-    where:{email:data.email}
+    where:{email}
     })
     
         
