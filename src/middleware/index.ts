@@ -6,10 +6,15 @@ import { DotenvConfig } from '../config/env.config'
 import { StatusCodes } from '../constant/statusCodes'
 import routes from '../routes/index.route'
 import { errorHandler } from './errorHandler.middleware'
-import { morganMiddleware } from './morgan.middleware'
-
 import morgan from 'morgan'
-const middleware = (app: Application) => {
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+// import { typeDefs } from '../graphql/schema'; // GraphQL Schema
+// import { resolvers } from '../graphql/resolvers'; // GraphQL Resolvers
+
+import bodyParser from 'body-parser';
+
+const middleware = async(app: Application) => {
   console.log('DotenvConfig.CORS_ORIGIN', DotenvConfig.CORS_ORIGIN)
   app.use(compression())
   app.use(
@@ -37,6 +42,17 @@ const middleware = (app: Application) => {
   //app.use(morganMiddleware)
   app.use(morgan('common'))
   app.use(express.urlencoded({extended:false}))
+  //Apollo Server Initialization
+  const graphqlServer=new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
+  await graphqlServer.start()
+  app.use(
+    '/graphql',
+    bodyParser.json(),
+    expressMiddleware(graphqlServer)
+  )
   app.use('/api', routes)
   
   app.use(express.static(path.join(__dirname, '../', '../', 'public/uploads')))
