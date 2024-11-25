@@ -24,19 +24,19 @@ export class DotenvConfig {
   static REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN!
   static FORGOT_PASSWORD_SECRET = process.env.FORGOT_PASSWORD_SECRET!
   static FORGOT_PASSWORD_EXPIRES_IN = process.env.FORGOT_PASSWORD_EXPIRES_IN!
-
+  static ACTIVATION_SECRET = process.env.ACTIVATION_SECRET!
   // *Server Information
   static BASE_URL = process.env.BASE_URL!
   static FOLDER = process.env.FOLDER!
   static TEMP_FOLDER = process.env.TEMP_FOLDER!
 
   //* Email Information
-  static MAIL_HOST = process.env.MAIL_HOST
-  static MAIL_AUTH = process.env.MAIL_AUTH
-  static MAIL_PASSWORD = process.env.MAIL_PASSWORD
-  static MAIL_PORT = process.env.MAIL_PORT
-  static MAIL_USERNAME = process.env.MAIL_USERNAME
-  static MAIL_FROM = process.env.MAIL_FROM
+  static MAIL_HOST = process.env.MAIL_HOST!
+  static MAIL_AUTH = process.env.MAIL_AUTH!
+  static MAIL_PASSWORD = process.env.MAIL_PASSWORD!
+  static MAIL_PORT = Number(process.env.MAIL_PORT);
+  static MAIL_USERNAME = process.env.MAIL_USERNAME!
+  static MAIL_FROM = process.env.MAIL_FROM!
 
   // *Trash
   static PERMANENT_DELETE_AFTER_DAYS = process.env.PERMANENT_DELETE_AFTER_DAYS!
