@@ -11,6 +11,6 @@ import {type Request, type Response} from 'express';
 export class UserController{
     async register(req:Request,res:Response){
         const {fullname,email,password}=req.body;
-        await userService.register(req.body)
+        // await userService.register(req.body)
     }
 }

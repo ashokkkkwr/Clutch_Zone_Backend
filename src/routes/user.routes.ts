@@ -9,7 +9,7 @@ const router: IRouter = Router()
 // const userAuthController = new UserAuthController()
 // router.post('/new-signup',upload.array('files'),catchAsync(userAuthController.))
 
-router.post('/register', upload.array('files'),catchAsync(userAuthController.create))
+// router.post('/register', upload.array('files'),catchAsync(.create))
 
 // router.patch('/update/:id',upload.array('files'),catchAsync(userAuthController.update))
 

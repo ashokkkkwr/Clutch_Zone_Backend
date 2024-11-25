@@ -13,6 +13,9 @@ export class User {
 
   @Column({ type: "varchar", nullable: true })
   email?: string;
+  @Column({ type: "varchar", nullable: true })
+  password?: string;
+
 
   @OneToMany(() => TeamPlayers, (teamPlayer) => teamPlayer.user)
   teamPlayers: TeamPlayers[];
@@ -34,7 +37,8 @@ export class User {
   token: string;
 
 
-
+@Column({nullable:true})
+otp:string
   @Column({
     type: 'enum',
     enum: Role,
