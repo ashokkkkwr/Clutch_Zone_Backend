@@ -53,5 +53,6 @@ export class User {
   @Column({ name: 'otp_expiration', type: 'timestamp', nullable: true })
   otpExpiration: Date |null;
 
-
+  @Column({name:'isVerified',default:false})
+  isVerified:boolean
 }

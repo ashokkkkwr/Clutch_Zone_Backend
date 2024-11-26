@@ -56,7 +56,7 @@ class UserService {
     console.log(`Your OTP is: ${otp}. It expires in 10 minutes.`);
     return otp;
   }
-  async verifyOtp(email: string, otp: string): Promise<boolean> 
+  async verifyOtp(otp: string, email: string): Promise<boolean> 
   {
     try{
         console.log('haha')
@@ -71,9 +71,8 @@ class UserService {
         await this.userRepo.save(user);
         return true;
     }catch(error){
-        return false
         console.log("🚀 ~ UserService ~ error:", error)
-        
+        return false
     }
    
   }

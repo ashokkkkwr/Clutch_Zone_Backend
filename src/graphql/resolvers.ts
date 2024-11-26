@@ -12,10 +12,7 @@ export const resolvers = {
     ) => {
       return userService.register(username, email, password);
     },
-    verifyOtp: async (
-      _: any,
-      { otp, email }: { otp: string; email: string }
-    ) => {
+    verifyOtp: async (_:any, { otp, email }:{otp:string;email:string}) => {
       return userService.verifyOtp(otp, email);
     },
   },
