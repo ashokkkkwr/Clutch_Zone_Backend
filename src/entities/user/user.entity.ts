@@ -16,7 +16,6 @@ export class User {
   @Column({ type: "varchar", nullable: true })
   password?: string;
 
-
   @OneToMany(() => TeamPlayers, (teamPlayer) => teamPlayer.user)
   teamPlayers: TeamPlayers[];
 
@@ -37,8 +36,10 @@ export class User {
   token: string;
 
 
-@Column({nullable:true})
-otp:string
+  @Column({ type: 'varchar', nullable: true })
+  otp: string | null;
+  
+
   @Column({
     type: 'enum',
     enum: Role,
@@ -49,7 +50,8 @@ otp:string
   @Column({ name:'active_status', default:false})
   active_status:boolean
  
-
+  @Column({ name: 'otp_expiration', type: 'timestamp', nullable: true })
+  otpExpiration: Date |null;
 
 
 }
