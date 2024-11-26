@@ -10,8 +10,14 @@ export const resolvers = {
       { username, email, password }: { username: string; email: string; password: string },
       { req }: { req: any } // Access req from context
     ) => {
-    //   const activationUrl = `${req.headers.origin}/activation?token=activationTokenPlaceholder`;
       return userService.register(username, email, password);
     },
+    verifyOtp: async (
+      _: any,
+      { otp, email }: { otp: string; email: string }
+    ) => {
+      return userService.verifyOtp(otp, email);
+    },
   },
-}
+};
+
