@@ -38,11 +38,11 @@ export const generateHtml = (body: string) => {
   </html>
 `
 }
-export const accountActivationMail = async ({ email, subject, fullname, token }:AccountActivationMailProps) => {
+export const accountActivationMail = async ( email:string, username:string, otp:string)  => {
   const mailOption = {
     from: `Esports zone <${process.env.SMTP_MAIL}>`,
     to: email,
-    subject,
+    subject:'THis is opt verification mail from clutchZone',
     html: `
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; background-color: #f3f3f3;">
       <tr>
@@ -51,10 +51,11 @@ export const accountActivationMail = async ({ email, subject, fullname, token }:
             <tr>
               <td align="center" style="padding: 40px;">
                 <h1 style="color: #333333; margin: 0;">Verify Your Email</h1>
-                <p style="color: #777777; margin: 20px 0;">Hi, ${fullname},</p>
-                <p style="color: #777777; margin: 20px 0;">In order to complete your registration, please click the button below to verify your email:</p>
-                <a href="${token}" style="display: inline-block; padding: 10px 20px; background-color: #FF8F40; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email</a>
-              </td>
+                <p style="color: #777777; margin: 20px 0;">Hi, ${username},</p>
+                <p style="color: #777777; margin: 20px 0;">In order to complete your registration, please enter  the below code  to verify your email:</p>
+                              <p style="color: #777777; margin: 20px 0;">${otp}</p>
+
+                </td>
             </tr>
           </table>
         </td>
