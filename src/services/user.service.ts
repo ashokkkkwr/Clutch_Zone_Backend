@@ -8,6 +8,7 @@ import {createToken, verifyToken} from '../utils/tokenManager';
 import {DotenvConfig} from '../config/env.config';
 import {addMinutes} from 'date-fns';
 import {randomInt} from 'crypto';
+import { accountActivationMail } from '../utils/mail.template';
 class UserService {
   constructor(private readonly userRepo = AppDataSource.getRepository(User)) {}
   async register(username: string, email: string, password: string) {
@@ -41,7 +42,11 @@ class UserService {
     });
     const users = await this.userRepo.save(save);
     // const activationToken = createToken(user, DotenvConfig.ACTIVATION_SECRET, '5m').toString();
-    this.generateOtp(email)
+    const otp=await this.generateOtp(email)
+    console.log("🚀 ~ UserService ~ register ~ otp:", otp)
+    
+    
+    accountActivationMail(email,username,otp)
   }
   async generateOtp(email: string): Promise<string> {
     const user = await this.userRepo.findOne({where: {email}});
