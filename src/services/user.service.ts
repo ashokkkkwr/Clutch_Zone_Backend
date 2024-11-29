@@ -45,7 +45,7 @@ class UserService {
     const otp=await this.generateOtp(email)
     console.log("🚀 ~ UserService ~ register ~ otp:", otp)
     
-    
+
     accountActivationMail(email,username,otp)
   }
   async generateOtp(email: string): Promise<string> {
@@ -81,5 +81,26 @@ class UserService {
     }
    
   }
+  async login(email:string,password:string){
+    const user=await this.userRepo.findOne({
+        where:{
+            email
+        }
+    })
+    if(!user){
+       throw HttpException.notFound(`Invalid credentials`); 
+    }
+    const matchPassword= await BcryptService.compare(password,user.password!)
+    if(!matchPassword){
+      throw HttpException.notFound(`Invalid credentials`); 
+
+    }
+    let token=createToken(
+      {id:user.id},
+      process.env.JWT_SECRET,
+      process.env.BROWSER_COOKIES_EXPIRES_IN
+    );
+    return token
+}
 }
 export default new UserService();
