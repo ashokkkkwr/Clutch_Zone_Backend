@@ -15,6 +15,11 @@ export const resolvers = {
     verifyOtp: async (_:any, { otp, email }:{otp:string;email:string}) => {
       return userService.verifyOtp(otp, email);
     },
+    login:async(
+      _:any,
+      {email,password}:{email:string,password:string},
+    )=>{
+      return userService.login(email,password)
+    }
   },
 };
-
