@@ -12,10 +12,16 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { typeDefs } from '../graphql/schema'; // GraphQL Schema
 import { resolvers } from '../graphql/resolvers'; // GraphQL Resolvers
 import bodyParser from 'body-parser';
+import { authenticateGraphql } from './authentication.graphql';
 
 // Define the GraphQL Context interface
+
 interface GraphQLContext {
   req: Request;
+  user?: {
+    id?: string;
+    role?: string;
+  };
 }
 
 const middleware = async (app: Application) => {
@@ -62,9 +68,17 @@ const middleware = async (app: Application) => {
     '/graphql',
     bodyParser.json(),
     expressMiddleware(graphqlServer, {
-      context: async ({ req }: { req: Request }): Promise<GraphQLContext> => ({ req }),
+      context: async ({ req }: { req: Request }): Promise<GraphQLContext> => {
+        // Call authenticateGraphql to attach the user to the request
+        await authenticateGraphql(req, {} as Response, () => {});
+  
+        // Return req and user in the GraphQL context
+        return { req, user: req.user };
+      },
     })
   );
+  
+  
 
   app.use('/api', routes);
 
