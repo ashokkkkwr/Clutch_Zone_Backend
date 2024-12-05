@@ -4,7 +4,6 @@ declare namespace Express {
       id?: string
       role?: string
     }
-    files?: any
   }
 }
 
