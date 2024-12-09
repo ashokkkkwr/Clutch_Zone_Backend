@@ -30,10 +30,6 @@ The backend for **Clutch Zone**, a system that enables tournament organizers to 
 - **Jest** (Testing framework)
 - **Dotenv** (Environment variable management)
 
----
-
-## Getting Started
-
 ### Prerequisites
 - Node.js (>=16.0.0)
 - PostgreSQL (>=13.0)
