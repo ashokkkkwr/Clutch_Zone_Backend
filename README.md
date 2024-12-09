@@ -17,6 +17,10 @@ The backend for **Clutch Zone**, a system that enables tournament organizers to 
 - RESTful API for frontend integration.
 - Graphql to prevent over featching.
 - Secure and scalable architecture.
+-Redis to:
+1. Session Management: Store user sessions in Redis for fast access and improved scalability
+2. Caching: Cache tournament and player data to reduce database load and speed up response times.
+3. Real Time Updates: Use Redis Pub/Sub to broadcast tournament updates and notifications to clients in real-time.
 
 ---
 
