@@ -10,11 +10,14 @@ export const typeDefs = gql`
 
   type Query {
     hello: String
+
   }
 
   type Mutation {
     register(username: String!, email: String!, password: String!): User
     verifyOtp(otp: String!, email: String!): Boolean
     login(email:String!, password:String!):User
+          getDetails: User
+
   }
 `;

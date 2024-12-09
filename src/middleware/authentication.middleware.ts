@@ -12,6 +12,7 @@ export const authentication = () => {
      * type(eg:Bearer) and the second element should be the actual token.
      */
     const tokens = req.headers.authorization?.split(' ')
+    console.log("🚀 ~ return ~ tokens:", tokens)
     try {
       if (!tokens) {
         throw HttpException.unauthorized(Message.notAuthorized)

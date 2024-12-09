@@ -26,7 +26,6 @@ interface GraphQLContext {
 
 const middleware = async (app: Application) => {
   console.log('DotenvConfig.CORS_ORIGIN', DotenvConfig.CORS_ORIGIN);
-
   app.use(compression());
   app.use(
     cors({
@@ -60,6 +59,8 @@ const middleware = async (app: Application) => {
   const graphqlServer = new ApolloServer({
     typeDefs,
     resolvers,
+    introspection: true, // Enable introspection explicitly
+
   });
 
   await graphqlServer.start();

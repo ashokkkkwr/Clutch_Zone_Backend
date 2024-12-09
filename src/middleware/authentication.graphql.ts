@@ -15,7 +15,7 @@ export const authenticateGraphql = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    throw HttpException.unauthorized("Authorization token is required.");
+    return {user:null}
   }
 
   const token = authHeader.split(" ")[1];
@@ -25,9 +25,9 @@ export const authenticateGraphql = async (
     if (!payload || typeof payload !== "object" || !("id" in payload)) {
       throw new Error("Invalid token payload");
     }
-
-    req.user = payload;
-    next();
+  return {
+    user:payload
+  }
   } catch (error) {
     throw HttpException.unauthorized("Invalid or expired Token");
   }
