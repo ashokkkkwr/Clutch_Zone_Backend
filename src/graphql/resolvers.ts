@@ -1,9 +1,10 @@
+import { authenticateUser } from '../middleware/authenticateUser';
 import userService from '../services/user.service';
 
 export const resolvers = {
   Query: {
     hello: () => "Hello World.",
-  },
+  }, 
   Mutation: {
     register: async (
       _: any,
@@ -20,6 +21,14 @@ export const resolvers = {
       {email,password}:{email:string,password:string},
     )=>{
       return userService.login(email,password)
+    },
+    getDetails:async(
+      _:any,
+      context:any
+    )=>{
+      const id=authenticateUser(context)
+      return userService.userDetails(id)
     }
+
   },
 };

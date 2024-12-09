@@ -105,5 +105,24 @@ class UserService {
     console.log("🚀 ~ UserService ~ login ~ token:", token)
     return token
 }
+async userDetails(id: string) {
+  // Convert the id to a number
+  const numericId = Number(id);
+
+  // Validate the numericId
+  if (isNaN(numericId)) {
+    throw new Error('Invalid ID: ID must be a valid number');
+  }
+
+  // Fetch user details
+  const userDetails = await this.userRepo.findOne({
+    where: {
+      id: numericId, // Use the converted number
+    },
+  });
+
+  return userDetails;
+}
+
 }
 export default new UserService();
