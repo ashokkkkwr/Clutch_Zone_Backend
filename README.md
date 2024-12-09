@@ -23,8 +23,9 @@ The backend for **Clutch Zone**, a system that enables tournament organizers to 
 ## Technologies Used
 - **Node.js** (JavaScript runtime)
 - **Express.js** (Web framework)
-- **GraphQL** 
+- **GraphQL (API query Langauge)** 
 - **PostgreSQL** (Relational database)
+- **Redis** (In memory data store)
 - **TypeORM** (Object Relational Mapper)
 - **Socket.io** (Real-time communication)
 - **Jest** (Testing framework)
