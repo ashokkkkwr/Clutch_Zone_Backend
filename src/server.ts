@@ -20,11 +20,6 @@ AppDataSource.initialize()
 
     listen();
   })
-
-
-
-
-  
   .catch((err) => {
     Print.error(`❌ Database connection failure - ${err?.message}`);
   }
