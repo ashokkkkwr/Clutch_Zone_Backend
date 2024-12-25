@@ -81,30 +81,28 @@ class UserService {
     }
    
   }
-  async login(email:string,password:string){
-    const user=await this.userRepo.findOne({
-        where:{
-            email
-        }
-    })
-    console.log("🚀 ~ UserService ~ login ~ user:", user)
-    if(!user){
-       throw HttpException.notFound(`Invalid credentials`); 
+  async login(email: string, password: string) {
+    const user = await this.userRepo.findOne({ where: { email } });
+    if (!user) {
+        throw HttpException.notFound(`Invalid credentials`);
     }
-    const matchPassword= await BcryptService.compare(password,user.password!)
-    console.log("🚀 ~ UserService ~ login ~ matchPassword:", matchPassword)
-    if(!matchPassword){
-      throw HttpException.notFound(`Invalid credentials`); 
-
+    const matchPassword = await BcryptService.compare(password, user.password!);
+    if (!matchPassword) {
+        throw HttpException.notFound(`Invalid credentials`);
     }
-    let token=createToken(
-      {id:user.id},
-      process.env.JWT_SECRET,
-      process.env.BROWSER_COOKIES_EXPIRES_IN
+    const token = createToken(
+        { id: user.id },
+        process.env.JWT_SECRET,
+        process.env.BROWSER_COOKIES_EXPIRES_IN
     );
-    console.log("🚀 ~ UserService ~ login ~ token:", token)
-    return token
+    return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        token,
+    };
 }
+
 async userDetails(id: string) {
   // Convert the id to a number
   const numericId = Number(id);

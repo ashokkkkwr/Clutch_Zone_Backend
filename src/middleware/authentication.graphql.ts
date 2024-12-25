@@ -13,6 +13,7 @@ export const authenticateGraphql = async (
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
+  console.log("🚀 ~ authHeader:", authHeader)
 
   if (!authHeader) {
     return {user:null}
