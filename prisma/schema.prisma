@@ -1,0 +1,228 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+generator client {
+  provider = "prisma-client-js"
+}
+model games {
+  id              Int               @id @default(autoincrement())
+  game_name       String            @map("game_name")
+  game_cover_image String?          @map("game_cover_image")
+  game_icon       String?           @map("game_icon")
+  tournaments     tournament[]
+  tournament_registration tournament_registration[]
+  in_game_ids     in_game_id[]
+}
+model in_game_id {
+  id          Int    @id @default(autoincrement())
+  player_id   String @map("player_id")
+  user_id     Int    @unique // Ensure this is unique
+  game_id     Int
+  user        user   @relation(fields: [user_id], references: [id])
+  game        games  @relation(fields: [game_id], references: [id])
+}
+model notification {
+  id         Int    @id @default(autoincrement())
+  message    String
+  users      String?
+  sender     Int
+  receiver   Int
+  links      String?
+  is_read    Boolean @default(false) @map("is_read")
+  user       user   @relation(fields: [sender], references: [id])
+}
+model prize_pool {
+  id         Int     @id @default(autoincrement())
+  prize      Int
+  placements Int
+  tournament tournament @relation(fields: [tournament_id], references: [id])
+  tournament_id Int
+}
+model teams {
+  id                  Int                @id @default(autoincrement())
+  team_name           String             @unique @map("team_name")
+  logo                String?
+  max_players         Int                @map("max_players")
+  slug                String?
+  wins                Int                @default(0)
+  tournaments_played  Int                @default(0) @map("tournaments_played")
+  user_id             Int
+  user                user               @relation(fields: [user_id], references: [id])
+  team_players        team_players[]
+  tournament_registrations tournament_registration[]
+}
+model team_players {
+  id      Int    @id @default(autoincrement())
+  role    String @default("player") @map("role")
+  team_id Int
+  user_id Int
+  team    teams  @relation(fields: [team_id], references: [id])
+  user    user   @relation(fields: [user_id], references: [id])
+}
+model time_slots {
+  id                    Int                        @id @default(autoincrement())
+  start_time            String                     @map("start_time")
+  end_time              String                     @map("end_time")
+  max_no_of_participants Int                       @map("max_no_of_participants")
+  start_time_number     String?                    @map("start_time_number")
+  end_time_number       String?                    @map("end_time_number")
+  tournament_id         Int
+  tournament            tournament                 @relation(fields: [tournament_id], references: [id])
+  tournament_results    tournament_result[]
+  tournament_registrations tournament_registration[] // New field added
+}
+model tournament_history {
+  id Int @id @default(autoincrement())
+  tournamentId Int
+  Tournament tournament @relation(fields: [tournamentId],references: [id])
+}
+model tournament {
+  id                              Int                 @id @default(autoincrement())
+  tournament_name                 String              @map("tournament_name")
+  tournament_icon                 String?             @map("tournament_icon")
+  tournament_cover                String?             @map("tournament_cover")
+  tournament_description          String              @map("tournament_description")
+  tournament_entry_fee            Float?              @map("tournament_entry_fee")
+  tournament_registration_start_date String           @map("tournament_registration_start_date")
+  tournament_registration_end_date   String           @map("tournament_registration_end_date")
+  tournament_start_date           String              @map("tournament_start_date")
+  tournament_end_date             String              @map("tournament_end_date")
+  tournament_start_date_number    String?             @map("tournament_start_date_number")
+  tournament_end_date_number      String?             @map("tournament_end_date_number")
+  tournament_game_mode            String              @map("tournament_game_mode")
+  tournament_streaming_link       String?             @map("tournament_streaming_link")
+  featured_tournament             Boolean @default(false) @map("featured_tournament")
+  games_id                        Int
+  games                           games @relation(fields: [games_id], references: [id])
+  time_slots                      time_slots[]
+  prize_pools                     prize_pool[]
+  tournament_registrations        tournament_registration[]
+  tournament_results              tournament_result[]
+  tournament_history              tournament_history[]
+}
+model tournament_result {
+  id            Int       @id @default(autoincrement())
+  placement     String?
+  tournament_id Int
+  time_slot_id  Int
+  tournament    tournament @relation(fields: [tournament_id], references: [id])
+  time_slots    time_slots @relation(fields: [time_slot_id], references: [id])
+}
+model tournament_registration {
+  id              Int       @id @default(autoincrement())
+  tournament_id   Int
+  user_id         Int
+  team_id         Int?
+  game_id         Int
+  time_slot_id    Int
+  tournament      tournament @relation(fields: [tournament_id], references: [id])
+  user            user       @relation(fields: [user_id], references: [id])
+  teams           teams?     @relation(fields: [team_id], references: [id])
+  games           games      @relation(fields: [game_id], references: [id])
+  time_slots      time_slots @relation(fields: [time_slot_id], references: [id])
+}
+model wallet {
+  id        Int     @id @default(autoincrement())
+  balance   Float   @default(0.0)
+  user_id   Int     @unique
+  user      user    @relation(fields: [user_id], references: [id])
+  transactions wallet_transaction[]
+}
+model withdraw_request {
+  id                  Int      @id @default(autoincrement())
+  withdraw_amount     Float    @map("withdraw_amount")
+  payment_method      String?  @map("payment_method")
+  wallet_number       String?  @map("wallet_number")
+  account_holder_name String?  @map("account_holder_name")
+  account_number      String?  @map("account_number")
+  bank_name           String?  @map("bank_name")
+  status              String   @default("pending")
+  user_id             Int
+  user                user     @relation(fields: [user_id], references: [id])
+}
+model user {
+  id                Int                @id @default(autoincrement())
+  fullname          String
+  username          String
+  email             String
+  google_id         String?            @map("google_id")
+  password          String
+  role              String             @default("user")
+  avatar            String             @default("uploads/avatar/avatar.png")
+  bio               String?
+  wins              Int                @default(0)
+  tournaments_played Int               @default(0) @map("tournaments_played")
+  wallet            wallet[]
+  teams             teams[]
+  team_players      team_players[]
+  tournament_registrations tournament_registration[]
+  notifications     notification[]
+  in_game_ids       in_game_id[]
+  Withdraw_request  withdraw_request[]
+   gear_purchases    gear_purchase[]
+  top_up_transactions top_up_transaction[]
+    purchases             gear_transaction[]
+}
+model gear {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Float
+  image       String?
+  stock       Int      @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  gear_purchase gear_purchase[]
+  gear_transaction gear_transaction[]
+}
+model gear_purchase {
+  id         Int     @id @default(autoincrement())
+  gear_id    Int
+  user_id    Int
+  quantity   Int     @default(1)
+  total_cost Float   @map("total_cost")
+  purchased_at DateTime @default(now())
+  gear       gear    @relation(fields: [gear_id], references: [id])
+  user       user    @relation(fields: [user_id], references: [id])
+}
+model top_up_option {
+  id          Int     @id @default(autoincrement())
+  name        String  @map("name") // Subscription or top-up option name
+  description String? @map("description")
+  price       Float   @map("price") // Cost of the top-up
+  duration    Int?    @map("duration") // Duration in days for subscriptions
+  is_active   Boolean @default(true) @map("is_active")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  top_up_transactions top_up_transaction[]
+}
+model top_up_transaction {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  top_up_option_id Int
+  transaction_id String?  // Reference to external payment ID
+  status         String   @default("pending") // e.g., "completed", "failed"
+  created_at     DateTime @default(now())
+  user           user     @relation(fields: [user_id], references: [id])
+  top_up_option  top_up_option @relation(fields: [top_up_option_id], references: [id])
+}
+model wallet_transaction {
+  id          Int      @id @default(autoincrement())
+  type        String    // e.g., "credit" or "debit"
+  amount      Float
+  description String?
+  created_at  DateTime  @default(now())
+  wallet_id   Int
+  wallet      wallet    @relation(fields: [wallet_id], references: [id])
+}
+model gear_transaction {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  gear_id     Int
+  quantity    Int
+  total_price Float
+  created_at  DateTime @default(now())
+  user        user     @relation(fields: [user_id], references: [id])
+  gear        gear     @relation(fields: [gear_id], references: [id])
+}
