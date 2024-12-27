@@ -1,15 +1,15 @@
 import { Router, type Request, type Response } from 'express'
-
+import game from './games.routes'
 export interface Route {
   path: string
   route: Router
 }
 const router = Router()
 const routes: Route[] = [
-//   {
-//     path: '/user',
-//     route: user,
-//   },
+  {
+    path: '/game',
+    route: game,
+  },
   
 
 ]
