@@ -143,9 +143,9 @@ model withdraw_request {
 }
 model user {
   id                Int                @id @default(autoincrement())
-  fullname          String
+
   username          String
-  email             String
+  email             String              @unique
   google_id         String?            @map("google_id")
   password          String
   role              String             @default("user")
@@ -153,6 +153,8 @@ model user {
   bio               String?
   wins              Int                @default(0)
   tournaments_played Int               @default(0) @map("tournaments_played")
+  otp               String?
+  otpExpiration     DateTime?
   wallet            wallet[]
   teams             teams[]
   team_players      team_players[]
