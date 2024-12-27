@@ -1,4 +1,3 @@
-import {AppDataSource} from '../config/database.config';
 import {Message} from '../constant/messages';
 import HttpException from '../utils/HttpException.utils';
 import BcryptService from '../utils/bcryptService';
