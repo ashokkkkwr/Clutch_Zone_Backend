@@ -167,6 +167,32 @@ model user {
   top_up_transactions top_up_transaction[]
     purchases             gear_transaction[]
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 model gear {
   id          Int      @id @default(autoincrement())
   name        String

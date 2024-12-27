@@ -26,12 +26,12 @@ import type {Router as IRouter} from 'express'
 import Router from 'express'
 import gameController from '../controller/game.controller'
 import {catchAsync} from '../utils/catchAsync.utils'
-import {upload} from '../middleware/multer.middleware'
+import {gamesImagesUpload} from '../middleware/multer.middleware'
 const router:IRouter=Router()
-router.post('/create', upload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),catchAsync(gameController.createGame))
-router.get('/',catchAsync(gameController.getGames))
+router.post('/create', gamesImagesUpload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),catchAsync(gameController.createGame))
+// router.get('/',catchAsync(gameController.getGames))
 router.get('/:id',catchAsync(gameController.getGame))
-router.patch('/update/:id',  upload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),
+router.patch('/update/:id',  gamesImagesUpload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),
 catchAsync(gameController.updateGame))
-router.delete('/:id',catchAsync(gameController.deleteGame))
+// router.delete('/:id',catchAsync(gameController.deleteGame))
 export default router

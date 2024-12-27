@@ -1,12 +1,17 @@
 import { authenticateUser } from '../middleware/authenticateUser';
 import userService from '../services/user.service';
 import gameService from '../services/game.service';
+import tournamentService from '../services/tournament.service';
+import { get } from 'http';
 
 export const resolvers = {
   Query: {
     hello: () => "Hello World.",
     getGames:()=>{
       return gameService.getGames()
+    },
+    getTournaments:()=>{
+      return tournamentService.getTournaments()
     }
   }, 
   Mutation: {
@@ -35,6 +40,12 @@ export const resolvers = {
     },
     deleteGame:async(_:any,{id}:{id:String})=>{
       return gameService.deleteGame(id as string)
-    }
+    },
+    getTournament:async(_:any,{id}:{id:String})=>{
+      return tournamentService.getTournament(id as string)
   },
-};
+  deleteTournament:async(_:any,{id}:{id:String})=>{
+    return tournamentService.deleteTournament(id as string)
+  }
+},
+}

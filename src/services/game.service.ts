@@ -1,12 +1,5 @@
-import {Message} from '../constant/messages';
+
 import HttpException from '../utils/HttpException.utils';
-import BcryptService from '../utils/bcryptService';
-import {transferImageFromUploadToTemp} from '../utils/path.utils';
-import {createToken, verifyToken} from '../utils/tokenManager';
-import {DotenvConfig} from '../config/env.config';
-import {addMinutes} from 'date-fns';
-import {randomInt} from 'crypto';
-import { accountActivationMail } from '../utils/mail.template';
 import { PrismaClient } from '@prisma/client';
 const prisma=new PrismaClient();
 

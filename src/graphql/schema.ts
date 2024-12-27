@@ -12,12 +12,27 @@ export const typeDefs = gql`
   game_name:String
   game_cover_image:String
   game_icon_image:String
-
   }
+  type TournamentDetails{
+    id:String
+    tournament_name:String
+    tournament_icon:String
+    tournament_cover:String
+    tournament_description:String
+    tournament_entry_fee:String
+    tournament_start_date:String
+    tournament_end_date:String
+    tournament_registration_start_date:String
+    tournament_registration_end_date:String
+    tournament_game_mode:String
+    tournament_streaming_link:String
+    games:Game
+    }
 
   type Query {
     hello: String
     getGames:[Game]
+    getTournaments:[TournamentDetails]
     
 
   }
@@ -28,6 +43,8 @@ export const typeDefs = gql`
     login(email:String!, password:String!):User
     getDetails:[User]
     deleteGame(id:ID!):Game
+    getTournament(id:ID!):TournamentDetails
+    deleteTournament(id:ID!):TournamentDetails
     
     
 
