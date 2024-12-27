@@ -101,6 +101,7 @@ model tournament {
   tournament_results              tournament_result[]
   tournament_history              tournament_history[]
 }
+
 model tournament_result {
   id            Int       @id @default(autoincrement())
   placement     String?

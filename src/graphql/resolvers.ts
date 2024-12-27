@@ -1,9 +1,13 @@
 import { authenticateUser } from '../middleware/authenticateUser';
 import userService from '../services/user.service';
+import gameService from '../services/game.service';
 
 export const resolvers = {
   Query: {
     hello: () => "Hello World.",
+    getGames:()=>{
+      return gameService.getGames()
+    }
   }, 
   Mutation: {
     register: async (
@@ -28,7 +32,9 @@ export const resolvers = {
     )=>{
       const id=authenticateUser(context)
       return userService.userDetails(id)
+    },
+    deleteGame:async(_:any,{id}:{id:String})=>{
+      return gameService.deleteGame(id as string)
     }
-
   },
 };
