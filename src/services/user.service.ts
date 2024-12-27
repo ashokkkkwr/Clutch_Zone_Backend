@@ -1,5 +1,4 @@
 import {AppDataSource} from '../config/database.config';
-import {User} from '../entities/user/user.entity';
 import {Message} from '../constant/messages';
 import HttpException from '../utils/HttpException.utils';
 import BcryptService from '../utils/bcryptService';
@@ -9,8 +8,11 @@ import {DotenvConfig} from '../config/env.config';
 import {addMinutes} from 'date-fns';
 import {randomInt} from 'crypto';
 import { accountActivationMail } from '../utils/mail.template';
+import { PrismaClient } from '@prisma/client';
+const prisma=new PrismaClient();
+
+
 class UserService {
-  constructor(private readonly userRepo = AppDataSource.getRepository(User)) {}
   async register(username: string, email: string, password: string) {
     console.log('🚀 ~ UserService ~ register ~ password:', password);
     console.log('🚀 ~ UserService ~ register ~ email:', email);
@@ -20,7 +22,7 @@ class UserService {
     if (!email) throw HttpException.badRequest(`Email is required`);
     if (!password) throw HttpException.badRequest('Password is required');
 
-    const userEmailExists = await this.userRepo.findOne({
+    const userEmailExists = await prisma.user.findUnique({
       where: {email},
     });
 
@@ -35,13 +37,14 @@ class UserService {
       password: hash,
     };
 
-    const save = this.userRepo.create({
-      email: email,
-      username,
-      password: hash,
+    const save = prisma.user.create({
+      data:{
+        email: email,
+        username,
+        password: hash,
+      }
+      
     });
-    const users = await this.userRepo.save(save);
-    // const activationToken = createToken(user, DotenvConfig.ACTIVATION_SECRET, '5m').toString();
     const otp=await this.generateOtp(email)
     console.log("🚀 ~ UserService ~ register ~ otp:", otp)
     
@@ -49,15 +52,22 @@ class UserService {
     accountActivationMail(email,username,otp)
   }
   async generateOtp(email: string): Promise<string> {
-    const user = await this.userRepo.findOne({where: {email}});
+    const user = await prisma.user.findFirst({where: {email}});
     console.log("🚀 ~ UserService ~ generateOtp ~ user:", user)
     if (!user) throw HttpException.notFound(`User with email ${email} does not exists.`);
     //Generate a random 6-digit OTP
     const otp = randomInt(100000, 999999).toString();
     const expirationTime = addMinutes(new Date(), 10);
-    user.otp = otp;
-    user.otpExpiration = expirationTime;
-    await this.userRepo.save(user);
+
+    await prisma.user.update({
+      data: {
+        otp,
+        otpExpiration: expirationTime
+      },
+      where:{
+        id:user.id
+      }
+    })
     console.log(`Your OTP is: ${otp}. It expires in 10 minutes.`);
     return otp;
   }
@@ -65,15 +75,19 @@ class UserService {
   {
     try{
         console.log('haha')
-        const user = await this.userRepo.findOne({where: {email}});
+        const user = await prisma.user.findUnique({where: {email}});
         console.log("🚀 ~ UserService ~ user:", user)
         if (!user) throw HttpException.notFound(`User with email ${email} does not exists.`);
         if (user.otp !== otp) throw HttpException.badRequest(`OTP has expired.`);
         //clear OTP fields after successful verification
-        user.otpExpiration = null; // set otpExpiration to null
-        user.otp = null;
-        user.otpExpiration = null;
-        await this.userRepo.save(user);
+        await prisma.user.update({
+          data:{
+            otpExpiration:null,
+            otp:null
+          },where:{
+            id:user.id
+          }
+        })
         return true;
     }catch(error){
         console.log("🚀 ~ UserService ~ error:", error)
@@ -82,7 +96,7 @@ class UserService {
    
   }
   async login(email: string, password: string) {
-    const user = await this.userRepo.findOne({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
         throw HttpException.notFound(`Invalid credentials`);
     }
@@ -113,7 +127,7 @@ async userDetails(id: string) {
   }
 
   // Fetch user details
-  const userDetails = await this.userRepo.findOne({
+  const userDetails = await prisma.user.findFirst({
     where: {
       id: numericId, // Use the converted number
     },
