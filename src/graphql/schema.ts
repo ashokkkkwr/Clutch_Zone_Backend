@@ -45,6 +45,8 @@ export const typeDefs = gql`
     deleteGame(id:ID!):Game
     getTournament(id:ID!):TournamentDetails
     deleteTournament(id:ID!):TournamentDetails
+
+    
     
     
 

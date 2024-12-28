@@ -220,8 +220,8 @@ model top_up_option {
   name        String  @map("name") // Subscription or top-up option name
   description String? @map("description")
   price       Float   @map("price") // Cost of the top-up
-  duration    Int?    @map("duration") // Duration in days for subscriptions
-  is_active   Boolean @default(true) @map("is_active")
+  amount    Int?    @map("amount") // Duration in days for subscriptions
+  // is_active   Boolean @default(true) @map("is_active")
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   top_up_transactions top_up_transaction[]

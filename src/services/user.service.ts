@@ -24,8 +24,10 @@ class UserService {
     const userEmailExists = await prisma.user.findUnique({
       where: {email},
     });
+    console.log("🚀 ~ UserService ~ register ~ userEmailExists:", userEmailExists)
 
     if (userEmailExists) {
+      console.log("🚀 ~ UserService ~ register ~ userEmailExists:", userEmailExists)
       throw new Error('You have already registered with this email');
     }
 
@@ -35,8 +37,9 @@ class UserService {
       email,
       password: hash,
     };
+    console.log("🚀 ~ UserService ~ register ~ user:", user)
 
-    const save = prisma.user.create({
+    const save =await prisma.user.create({
       data:{
         email: email,
         username,
@@ -44,6 +47,7 @@ class UserService {
       }
       
     });
+    console.log("🚀 ~ UserService ~ register ~ save:", save)
     const otp=await this.generateOtp(email)
     console.log("🚀 ~ UserService ~ register ~ otp:", otp)
     
