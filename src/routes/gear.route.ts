@@ -9,3 +9,14 @@
 // router.patch('/update/:id',  gamesImagesUpload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),
 // catchAsync(gameController.updateGame));
 // export default router
+
+
+import type {Router as IRouter} from 'express';
+import Router from 'express'
+import gearController from '../controller/gear.controller';
+import { catchAsync } from '../utils/catchAsync.utils';
+import { gearImagesUpload } from '../middleware/multer.middleware';
+const router:IRouter=Router()
+router.post('/create',gearImagesUpload.fields([{name:'image'}]),catchAsync(gearController.createGear))
+
+export default router
