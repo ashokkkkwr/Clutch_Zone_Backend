@@ -13,7 +13,7 @@ import { typeDefs } from '../graphql/schema'; // GraphQL Schema
 import { resolvers } from '../graphql/resolvers'; // GraphQL Resolvers
 import bodyParser from 'body-parser';
 import { authenticateGraphql } from './authentication.graphql';
-
+import adminSeedService from '../utils/adminSeed.service';
 // Define the GraphQL Context interface
 
 interface GraphQLContext {
@@ -93,6 +93,6 @@ const middleware = async (app: Application) => {
   });
 
   app.use(errorHandler);
+  await adminSeedService.seed();
 };
-
 export default middleware;
