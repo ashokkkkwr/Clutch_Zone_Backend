@@ -94,10 +94,11 @@ class UserService {
         console.log("🚀 ~ UserService ~ error:", error)
         return false
     }
-   
-  }
+}
+
   async login(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log("🚀 ~ UserService ~ login ~ user:", user)
     if (!user) {
         throw HttpException.notFound(`Invalid credentials`);
     }
@@ -111,10 +112,9 @@ class UserService {
         process.env.BROWSER_COOKIES_EXPIRES_IN
     );
     return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        token,
+        user,
+        token
+   
     };
 }
 
@@ -126,7 +126,6 @@ async userDetails(id: string) {
   if (isNaN(numericId)) {
     throw new Error('Invalid ID: ID must be a valid number');
   }
-
   // Fetch user details
   const userDetails = await prisma.user.findFirst({
     where: {
