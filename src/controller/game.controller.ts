@@ -14,7 +14,6 @@ import gameService from '../services/game.service';
         const gameCoverImage = files?.['game_cover_image'] 
             ? files['game_cover_image'][0].path 
             : null;
-    
         const gameIcon = files?.['game_icon'] 
             ? files['game_icon'][0].path 
             : null;
