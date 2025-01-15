@@ -100,10 +100,12 @@ class UserService {
   }
   async login(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log("🚀 ~ UserService ~ login ~ user:", user)
     if (!user) {
         throw HttpException.notFound(`Invalid credentials`);
     }
     const matchPassword = await BcryptService.compare(password, user.password!);
+    console.log("🚀 ~ UserService ~ login ~ matchPassword:", matchPassword)
     if (!matchPassword) {
         throw HttpException.notFound(`Invalid credentials`);
     }
@@ -113,10 +115,11 @@ class UserService {
         process.env.BROWSER_COOKIES_EXPIRES_IN
     );
     return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        token,
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      token,
     };
 }
 

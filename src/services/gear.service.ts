@@ -22,8 +22,6 @@ class GearService{
                 stock:parseInt(stock),
                 description,
                 image
-
-
             }
         })
         return newGear

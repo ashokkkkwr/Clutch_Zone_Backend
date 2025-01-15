@@ -93,7 +93,7 @@ model tournament {
   tournament_end_date_number      String?             @map("tournament_end_date_number")
   tournament_game_mode            String              @map("tournament_game_mode")
   tournament_streaming_link       String?             @map("tournament_streaming_link")
-  featured_tournament             Boolean @default(false) @map("featured_tournament")
+  featured_tournament             Boolean             @default(false) @map("featured_tournament")
   games_id                        Int
   games                           games @relation(fields: [games_id], references: [id])
   time_slots                      time_slots[]
@@ -101,7 +101,24 @@ model tournament {
   tournament_registrations        tournament_registration[]
   tournament_results              tournament_result[]
   tournament_history              tournament_history[]
+  bracket                         Bracket?            // Relation without `fields` or `references`
+
+  createdAt                       DateTime            @default(now())
+  updatedAt                       DateTime            @updatedAt
 }
+
+model Bracket {
+  id            Int         @id @default(autoincrement())
+  tournamentId  Int         @unique
+  tournament    tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // Define `fields` and `references` here
+  data          Json        // Stores the bracket data as JSON
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+
+
+
 
 model tournament_result {
   id            Int       @id @default(autoincrement())
@@ -145,7 +162,6 @@ model withdraw_request {
 }
 model user {
   id                Int                @id @default(autoincrement())
-
   username          String
   email             String              @unique
   google_id         String?            @map("google_id")

@@ -4,6 +4,7 @@ export const typeDefs = gql`
   type User {
     id: ID!
     username: String!
+    role: String!
     email: String
     token: String
   }
@@ -46,9 +47,6 @@ export const typeDefs = gql`
     getTournament(id:ID!):TournamentDetails
     deleteTournament(id:ID!):TournamentDetails
 
-    
-    
-    
 
   }
 `;
