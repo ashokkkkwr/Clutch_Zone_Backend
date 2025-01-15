@@ -50,5 +50,6 @@ class TournamentController{
         })
         res.status(200).json(updatedTournament)
     }
+    
 }
 export default new TournamentController();

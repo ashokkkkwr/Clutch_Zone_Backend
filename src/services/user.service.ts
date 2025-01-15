@@ -103,6 +103,7 @@ class UserService {
         throw HttpException.notFound(`Invalid credentials`);
     }
     const matchPassword = await BcryptService.compare(password, user.password!);
+    console.log("🚀 ~ UserService ~ login ~ matchPassword:", matchPassword)
     if (!matchPassword) {
         throw HttpException.notFound(`Invalid credentials`);
     }
@@ -112,9 +113,15 @@ class UserService {
         process.env.BROWSER_COOKIES_EXPIRES_IN
     );
     return {
-        user,
-        token
-   
+
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      token,
+
+       
+
     };
 }
 

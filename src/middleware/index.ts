@@ -13,7 +13,16 @@ import { typeDefs } from '../graphql/schema'; // GraphQL Schema
 import { resolvers } from '../graphql/resolvers'; // GraphQL Resolvers
 import bodyParser from 'body-parser';
 import { authenticateGraphql } from './authentication.graphql';
+
+import { PrismaClient } from '@prisma/client';
+import BcryptService from '../utils/bcryptService';
+
+const prisma = new PrismaClient();
+
+
+
 import adminSeedService from '../utils/adminSeed.service';
+
 // Define the GraphQL Context interface
 
 interface GraphQLContext {
@@ -65,6 +74,30 @@ const middleware = async (app: Application) => {
 
   await graphqlServer.start();
 
+const findIfExists= await prisma.user.findFirst({
+  where:{
+    email: 'admin@gmail.com'
+  }
+})
+  console.log("🚀 ~ middleware ~ findIfExists:", findIfExists)
+const password='admin'
+  const hash = await BcryptService.hash(password);
+  // const detele= await prisma.user.delete({
+  //   where:{
+  //     email: 'admin@gmail.com'
+  //   }
+  // })
+
+  if(!findIfExists){
+    const seedAdmin= await prisma.user.create({
+      data:{
+        email: 'admin@gmail.com',
+        password: hash,
+        username: 'admin',
+        role: 'admin',
+      }
+    })
+  }
   app.use(
     '/graphql',
     bodyParser.json(),
