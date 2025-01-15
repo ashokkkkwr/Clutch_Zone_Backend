@@ -13,11 +13,15 @@ import { typeDefs } from '../graphql/schema'; // GraphQL Schema
 import { resolvers } from '../graphql/resolvers'; // GraphQL Resolvers
 import bodyParser from 'body-parser';
 import { authenticateGraphql } from './authentication.graphql';
+
 import { PrismaClient } from '@prisma/client';
 import BcryptService from '../utils/bcryptService';
 
 const prisma = new PrismaClient();
 
+
+
+import adminSeedService from '../utils/adminSeed.service';
 
 // Define the GraphQL Context interface
 
@@ -122,6 +126,6 @@ const password='admin'
   });
 
   app.use(errorHandler);
+  await adminSeedService.seed();
 };
-
 export default middleware;

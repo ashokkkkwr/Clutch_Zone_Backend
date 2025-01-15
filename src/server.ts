@@ -13,5 +13,4 @@ function listen() {
   httpServer.listen(PORT);
   Print.info(`🚀 Server is listening on port ${DotenvConfig.PORT}`);
 }
-
 listen()

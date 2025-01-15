@@ -180,36 +180,10 @@ model user {
   notifications     notification[]
   in_game_ids       in_game_id[]
   Withdraw_request  withdraw_request[]
-   gear_purchases    gear_purchase[]
+  gear_purchases    gear_purchase[]
   top_up_transactions top_up_transaction[]
-    purchases             gear_transaction[]
+  purchases             gear_transaction[]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 model gear {
   id          Int      @id @default(autoincrement())
   name        String @unique

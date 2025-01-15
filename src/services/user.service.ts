@@ -1,9 +1,7 @@
-import {Message} from '../constant/messages';
+
 import HttpException from '../utils/HttpException.utils';
 import BcryptService from '../utils/bcryptService';
-import {transferImageFromUploadToTemp} from '../utils/path.utils';
 import {createToken, verifyToken} from '../utils/tokenManager';
-import {DotenvConfig} from '../config/env.config';
 import {addMinutes} from 'date-fns';
 import {randomInt} from 'crypto';
 import { accountActivationMail } from '../utils/mail.template';
@@ -96,8 +94,8 @@ class UserService {
         console.log("🚀 ~ UserService ~ error:", error)
         return false
     }
-   
-  }
+}
+
   async login(email: string, password: string) {
     const user = await prisma.user.findUnique({ where: { email } });
     console.log("🚀 ~ UserService ~ login ~ user:", user)
@@ -115,11 +113,15 @@ class UserService {
         process.env.BROWSER_COOKIES_EXPIRES_IN
     );
     return {
+
       id: user.id,
       username: user.username,
       role: user.role,
       email: user.email,
       token,
+
+       
+
     };
 }
 
@@ -131,7 +133,6 @@ async userDetails(id: string) {
   if (isNaN(numericId)) {
     throw new Error('Invalid ID: ID must be a valid number');
   }
-
   // Fetch user details
   const userDetails = await prisma.user.findFirst({
     where: {

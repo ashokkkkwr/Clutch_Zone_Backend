@@ -6,8 +6,12 @@ export const typeDefs = gql`
     username: String!
     role: String!
     email: String
-    token: String
+    role:String
   }
+    type Login{
+    user:User,
+    token:String,
+    }
   type Game{
   id:String
   game_name:String
@@ -41,7 +45,7 @@ export const typeDefs = gql`
   type Mutation {
     register(username: String!, email: String!, password: String!): User
     verifyOtp(otp: String!, email: String!): Boolean
-    login(email:String!, password:String!):User
+    login(email:String!, password:String!):Login
     getDetails:[User]
     deleteGame(id:ID!):Game
     getTournament(id:ID!):TournamentDetails
