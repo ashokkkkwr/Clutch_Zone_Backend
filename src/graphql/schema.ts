@@ -14,6 +14,7 @@ export const typeDefs = gql`
   game_cover_image:String
   game_icon_image:String
   }
+  
   type TournamentDetails{
     id:String
     tournament_name:String
@@ -29,24 +30,29 @@ export const typeDefs = gql`
     tournament_streaming_link:String
     games:Game
     }
+    type teams{
+    id:String
+    team_name:String
+    slug:String
+    logo:String
+    team_leader:String
+    }
 
   type Query {
     hello: String
     getGames:[Game]
     getTournaments:[TournamentDetails]
-    
-
+    getTeams:[teams]
+    getTournament(id:ID!):TournamentDetails
   }
-
   type Mutation {
     register(username: String!, email: String!, password: String!): User
     verifyOtp(otp: String!, email: String!): Boolean
     login(email:String!, password:String!):User
     getDetails:[User]
     deleteGame(id:ID!):Game
-    getTournament(id:ID!):TournamentDetails
     deleteTournament(id:ID!):TournamentDetails
-
+    registerTournament(id:ID!):TournamentDetails
 
   }
 `;

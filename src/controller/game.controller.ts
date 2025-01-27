@@ -6,20 +6,31 @@ import {Request,Response} from 'express';
 import gameService from '../services/game.service';
 
  class GameController {
-  async createGame(req: Request, res: Response) {
+    async createGame(req: Request, res: Response) {
         const { game_name } = req.body;
-        console.log("🚀 ~ GameController ~ createGame ~ game_name:", game_name)
-        console.log("🚀 ~ GameController ~ createGame ~ game_name:", game_name)
+        console.log("🚀 ~ GameController ~ createGame ~ game_name:", game_name);
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-        const gameCoverImage = files?.['game_cover_image'] 
-            ? files['game_cover_image'][0].path 
+        // Get the base URL dynamically from the request
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+        // Construct the full URLs for gameCoverImage and gameIcon
+        const gameCoverImage = files?.['game_cover_image']
+            ? `${baseUrl}/${files['game_cover_image'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
+            : null;
+        console.log("🚀 ~ GameController ~ createGame ~ gameCoverImage:", gameCoverImage);
+        const gameIcon = files?.['game_icon']
+            ? `${baseUrl}/${files['game_icon'][0].path.replace(/\\/g, '/')}`
             : null;
     
-        const gameIcon = files?.['game_icon'] 
-            ? files['game_icon'][0].path 
-            : null;
-         const saved=  await gameService.createGame(game_name,gameCoverImage as string,gameIcon as string);
-        return res.status(201).json({ message: 'Game created successfully',data: saved}); 
+        console.log("🚀 ~ GameController ~ createGame ~ gameIcon:", gameIcon);
+    
+        // Save the game data
+        const saved = await gameService.createGame(
+            game_name,
+            gameCoverImage as string,
+            gameIcon as string
+        );
+        return res.status(201).json({ message: 'Game created successfully', data: saved });
     }
     async getGame(req: Request, res: Response) {
         const { id } = req.params;

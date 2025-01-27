@@ -5,5 +5,5 @@ import {catchAsync} from '../utils/catchAsync.utils'
 import {tournamentImagesUpload} from '../middleware/multer.middleware'
 const router:IRouter=Router()   
 router.post('/create',tournamentImagesUpload.fields([{name:'tournament_icon'},{name:'tournament_cover'}]),catchAsync(tournamentController.createTournament))
-
+router.get('/bracket/:id',tournamentController.fetchBrackets)
 export default router   

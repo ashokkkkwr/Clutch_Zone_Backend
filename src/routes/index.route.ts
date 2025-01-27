@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express'
 import game from './games.route'
 import tournament from './tournament.route'
 import gear from './gear.route'
+import team from './team.route'
 export interface Route {
   path: string
   route: Router
@@ -19,6 +20,10 @@ const routes: Route[] = [
   {
     path:'/gear',
     route:gear,
+  },
+  {
+    path:'/team',
+    route:team
   }
 ]
 routes.forEach((route) => {

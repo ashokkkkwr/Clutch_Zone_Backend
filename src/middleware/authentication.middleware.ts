@@ -24,7 +24,7 @@ export const authentication = () => {
       const payload = webTokenService.verify(accessToken, DotenvConfig.ACCESS_TOKEN_SECRET)
       if (payload) {
         req.user = payload
-    
+    console.log('ougo')
         next()
       } else {
         throw HttpException.unauthorized(Message.notAuthorized)

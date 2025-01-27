@@ -4,20 +4,25 @@ import tournament from '../services/tournament.service';
 import {Request,Response} from 'express';
 class TournamentController{
     async createTournament(req:Request,res:Response){
-        console.log("object");
-        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id}=req.body;
+        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player}=req.body;
         const files =req.files as {[fieldname:string]:Express.Multer.File[]}|undefined;
-        const tournament_icon=files?.['tournament_icon']
-        ?files['tournament_icon'][0].path
-        :'';
-        console.log("🚀 ~ TournamentController ~ createTournament ~ tournament_icon:", tournament_icon)
+        const baseUrl = `${req.protocol}://${req.get('host')}`
 
-        const tournament_cover=files?.['tournament_cover']
-        ?files['tournament_cover'][0].path
-        :'';
+
+        // Construct the full URLs for gameCoverImage and gameIcon
+        const tournament_cover = files?.['tournament_cover']
+            ? `${baseUrl}/${files['tournament_cover'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
+            : null;
+        const tournament_icon = files?.['tournament_icon']
+            ? `${baseUrl}/${files['tournament_icon'][0].path.replace(/\\/g, '/')}`
+            : null;
+
+
+
+
         console.log("🚀 ~ TournamentController ~ createTournament ~ tournament_cover:", tournament_cover)
-
-        const saved=await tournament.createTournament(tournament_icon,tournament_cover,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id)
+        console.log("🚀 ~ TournamentController ~ createTournament ~ total_player:", total_player)
+        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,)
         return res.status(201).json({message:'Tournament created successfully',data:saved});
     }
     async updateTournament(req:Request,res:Response){
@@ -50,6 +55,11 @@ class TournamentController{
         })
         res.status(200).json(updatedTournament)
     }
-    
+    async fetchBrackets(req: Request, res: Response){
+        const {id} = req.params;
+        console.log("🚀 ~ TournamentController ~ fetchBrackets ~ id:", id)
+        const bracket = await tournament.getBracket(id);
+        return res.status(200).json(bracket);
+    } 
 }
 export default new TournamentController();

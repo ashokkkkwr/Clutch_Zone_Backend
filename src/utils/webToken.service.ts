@@ -30,6 +30,11 @@ class WebTokenService {
     )
   }
   generateTokens(user: IJwtPayload, role: Role): { accessToken: string; refreshToken: string } {
+    console.log("🚀 ~ WebTokenService ~ generateTokens ~ role:", role)
+    console.log("🚀 ~ WebTokenService ~ generateTokens ~ user:", user)
+    console.log('first')
+    console.log("🚀 ~ WebTokenService ~ generateTokens ~ DotenvConfig.ACCESS_TOKEN_SECRET:", DotenvConfig.ACCESS_TOKEN_SECRET)
+    console.log("🚀 ~ WebTokenService ~ generateTokens ~ DotenvConfig.ACCESS_TOKEN_EXPIRES_IN:", DotenvConfig.ACCESS_TOKEN_EXPIRES_IN)
     const accessToken = this.sign(
       user,
       {
@@ -38,6 +43,9 @@ class WebTokenService {
       },
       role
     )
+        
+       
+    console.log('ya??')
     const refreshToken = this.sign(
       user,
       {

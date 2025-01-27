@@ -18,11 +18,18 @@ class TournamentService{
         tournament_registration_end_date: string,
         tournament_game_mode: string,
         tournament_streaming_link: string,
-        games_id: string
+        games_id: string,
+        //minimum numbher of players like 16 8 4 or 2 players
+        total_player:string
     ) {
-    
+        console.log("🚀 ~ TournamentService ~ total_player:", total_player)
+        const validPlayers = [2, 4, 8, 16, 32];
+        if (!validPlayers.includes(parseInt(total_player))) {
+            throw HttpException.badRequest(
+                `Invalid total players. Must be one of ${validPlayers.join(', ')}`
+            );
+        }
         try {
-            // Create tournament record in the database
             const tournament = await prisma.tournament.create({
                 data: {
                     tournament_name,
@@ -37,18 +44,18 @@ class TournamentService{
                     tournament_game_mode,
                     tournament_streaming_link,
                     games_id: parseInt(games_id),
+                    total_player: parseInt(total_player)
                 },
             });
-             // Create an empty bracket
-        await prisma.bracket.create({
-            data: {
-                tournamentId: tournament.id,
-                data: JSON.stringify({
-                    rounds: [],
-                    leaderboard: [],
-                }),
-            },
-        });
+            const createDraftBracket = await prisma.bracket.create({
+                data: {
+                    tournamentId: tournament.id,
+                    totalPlayers: parseInt(total_player), // Ensure total players match tournament settings
+                    user_id: null, // Assuming a draft bracket doesn't yet assign users
+                },
+            });
+            
+        
     
             return tournament;
         } catch (error) {
@@ -56,14 +63,14 @@ class TournamentService{
             throw HttpException.internalServerError('Something went wrong');
         }
     }
-    
-    
+      
 async getTournaments(){
     const tournaments=await prisma.tournament.findMany({
         include:{
             games:true
         }
     })
+    console.log("🚀 ~ TournamentService ~ getTournaments ~ tournaments:", tournaments)
     return tournaments;
 }
 async getTournament(id:string){
@@ -75,6 +82,7 @@ async getTournament(id:string){
             games:true
         }
     })
+    console.log("🚀 ~ TournamentService ~ getTournament ~ tournament:", tournament)
     return tournament;
 }
 async deleteTournament( id:string){
@@ -85,26 +93,38 @@ async deleteTournament( id:string){
     })
     return tournament;
 }
-async getBracket(id:string){
-    try{
-        const bracket=await prisma.bracket.findUnique({
-            where:{
-                tournamentId:parseInt(id)
-            },
-            select:{data:true}
-        })
-        if(!bracket){
-            throw HttpException.internalServerError('Something went wrong');
+async getBracket(id: string) {
+    try {
+        const bracket = await prisma.bracket.findUnique({
+            where: { tournamentId: parseInt(id) },
+            include: { tournament: true, user: true },
+        });
+        if (!bracket) {
+            throw HttpException.notFound('Bracket not found');
         }
         return bracket;
-    }catch(err) {
-    console.log("🚀 ~ TournamentService ~ getBracket ~ err:", err)
+    } catch (err) {
+        console.error('Error retrieving bracket:', err);
+        throw HttpException.internalServerError('Something went wrong');
     }
 }
-
+async registerTournament(user_id:string,tournament_id:string){
+console.log("🚀 ~ TournamentService ~ registerTournament ~ tournament_id:", tournament_id)
+console.log("🚀 ~ TournamentService ~ registerTournament ~ user_id:", user_id)
+console.log('haha')
+const tournmanet = await prisma.tournament.findFirst({
+    where:{
+         id:Number(tournament_id)
+    }
+})
+const user= await prisma.user.findFirst({
+    where:{
+        id:Number(user_id)
+    }
+})
+console.log("🚀 ~ TournamentService ~ registerTournament ~ user:", user)
+console.log("🚀 ~ TournamentService ~ registerTournament ~ tournmanet:", tournmanet)
 
 }
-
-
-
+}
 export default new TournamentService(); 

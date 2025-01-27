@@ -48,8 +48,8 @@ model teams {
   slug                String?
   wins                Int                @default(0)
   tournaments_played  Int                @default(0) @map("tournaments_played")
-  user_id             Int
-  user                user               @relation(fields: [user_id], references: [id])
+  team_leader         Int
+  user                user               @relation(fields: [team_leader], references: [id])
   team_players        team_players[]
   tournament_registrations tournament_registration[]
 }
@@ -95,6 +95,7 @@ model tournament {
   tournament_streaming_link       String?             @map("tournament_streaming_link")
   featured_tournament             Boolean             @default(false) @map("featured_tournament")
   games_id                        Int
+  total_player                  Int
   games                           games @relation(fields: [games_id], references: [id])
   time_slots                      time_slots[]
   prize_pools                     prize_pool[]
@@ -109,11 +110,14 @@ model tournament {
 
 model Bracket {
   id            Int         @id @default(autoincrement())
+  totalPlayers  Int         @default(0)
   tournamentId  Int         @unique
-  tournament    tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade) // Define `fields` and `references` here
-  data          Json        // Stores the bracket data as JSON
-  createdAt     DateTime    @default(now())
+  tournament    tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user_id         Int?
+  user            user?       @relation(fields: [user_id], references: [id])
+    createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
 }
 
 
@@ -166,7 +170,7 @@ model user {
   email             String              @unique
   google_id         String?            @map("google_id")
   password          String
-  role              String             @default("user")
+  role  String @default("USER") // Use Prisma enums for stricter typing if needed
   avatar            String             @default("uploads/avatar/avatar.png")
   bio               String?
   wins              Int                @default(0)
@@ -183,32 +187,15 @@ model user {
    gear_purchases    gear_purchase[]
   top_up_transactions top_up_transaction[]
     purchases             gear_transaction[]
+
+  Bracket Bracket[]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+enum Role {
+  SUDO_ADMIN
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
 
 model gear {
   id          Int      @id @default(autoincrement())

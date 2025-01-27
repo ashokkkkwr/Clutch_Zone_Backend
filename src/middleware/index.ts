@@ -65,6 +65,7 @@ const middleware = async (app: Application) => {
     typeDefs,
     resolvers,
     introspection: true, // Enable introspection explicitly
+    
 
   });
 
@@ -98,22 +99,27 @@ const password='admin'
     '/graphql',
     bodyParser.json(),
     expressMiddleware(graphqlServer, {
-      context: async ({ req }: { req: Request }): Promise<GraphQLContext> => {
-        // Call authenticateGraphql to attach the user to the request
-        await authenticateGraphql(req, {} as Response, () => {});
-  
-        // Return req and user in the GraphQL context
-        return { req, user: req.user };
+      context: async ({ req }) => {
+        const { user } = await authenticateGraphql(req, {} as Response, () => {});
+        if (!user) {
+          console.error("User not authenticated");
+        }
+        console.log('authenticated user')
+        console.log(user)
+        return { req, user };
       },
     })
   );
   
   
+  
 
   app.use('/api', routes);
-
-  app.use(express.static(path.join(__dirname, '../', '../', 'public/uploads')));
-  app.use(express.static(path.join(__dirname, '../', '../', 'public')));
+  app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')));
+  console.log('Static files path:', path.join(__dirname, '..', '..', 'uploads'));
+ 
+  
+  // app.use(express.static(path.join(__dirname, '../', '../', 'public/uploads')));
 
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, '../', 'views'));

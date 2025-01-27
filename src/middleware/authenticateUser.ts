@@ -1,10 +1,11 @@
-import {AuthenticationError,AuthorizationError} from '../utils/customAuthenticationError'
-export const authenticateUser=(context:any):string=>{
-    if(!context.user){
-        throw new AuthenticationError();
+export const authenticateUser = (context: any): string => {
+    console.log("🚀 ~ authenticateUser ~ context:", context);
+  
+    if (!context.user || !context.user.id) {
+      console.error("🚀 ~ authenticateUser ~ context.user:", context.user);
     }
-    if(!context.user.userId){
-        throw new AuthenticationError();
-    }
-    return context.user.userId
-}
+  
+    console.log("🚀 ~ authenticateUser ~ context.user.id:", context.user.id);
+    return context.user.id;
+  };
+  

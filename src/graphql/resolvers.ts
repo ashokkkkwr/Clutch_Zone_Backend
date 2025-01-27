@@ -3,7 +3,7 @@ import userService from '../services/user.service';
 import gameService from '../services/game.service';
 import tournamentService from '../services/tournament.service';
 import { get } from 'http';
-
+import teamService from '../services/team.service';
 export const resolvers = {
   Query: {
     hello: () => "Hello World.",
@@ -12,7 +12,13 @@ export const resolvers = {
     },
     getTournaments:()=>{
       return tournamentService.getTournaments()
-    }
+    },
+    getTeams:()=>{
+      return teamService.getTeam()
+    },
+    getTournament:async(_:any,{id}:{id:String})=>{
+      return tournamentService.getTournament(id as string)
+  },
   }, 
   Mutation: {
     register: async (
@@ -38,14 +44,29 @@ export const resolvers = {
       const id=authenticateUser(context)
       return userService.userDetails(id)
     },
+    registerTournament:async(
+
+      _:any,
+      {id}:{id:string},
+
+      context:any,
+
+
+    )=>{
+      console.log("🚀 ~ registerTournamentId:", id)
+      const userId=authenticateUser(context)
+      console.log("🚀 ~ userId:", userId)
+      // const rgi
+      return tournamentService.registerTournament(userId,id)
+    },
     deleteGame:async(_:any,{id}:{id:String})=>{
       return gameService.deleteGame(id as string)
     },
-    getTournament:async(_:any,{id}:{id:String})=>{
-      return tournamentService.getTournament(id as string)
-  },
+    
   deleteTournament:async(_:any,{id}:{id:String})=>{
+
     return tournamentService.deleteTournament(id as string)
+    
   }
 },
 }

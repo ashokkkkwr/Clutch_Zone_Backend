@@ -8,6 +8,9 @@ import {addMinutes} from 'date-fns';
 import {randomInt} from 'crypto';
 import { accountActivationMail } from '../utils/mail.template';
 import { PrismaClient } from '@prisma/client';
+import webTokenService from '../utils/webToken.service';
+import {Role} from '../constant/enum';
+
 const prisma=new PrismaClient();
 
 
@@ -36,6 +39,8 @@ class UserService {
       username,
       email,
       password: hash,
+      role: Role.USER, // Assign using the Role enum
+
     };
     console.log("🚀 ~ UserService ~ register ~ user:", user)
 
@@ -109,17 +114,29 @@ class UserService {
     if (!matchPassword) {
         throw HttpException.notFound(`Invalid credentials`);
     }
-    const token = createToken(
-        { id: user.id },
-        process.env.JWT_SECRET,
-        process.env.BROWSER_COOKIES_EXPIRES_IN
-    );
+    // const token = createToken(
+    //     { id: user.id },
+    //     process.env.JWT_SECRET,
+    //     process.env.BROWSER_COOKIES_EXPIRES_IN
+    // );
+    const tokenId= Number(user.id)
+    console.log("🚀 ~ UserService ~ login ~ tokenId:", tokenId)
+    const token = webTokenService.generateTokens(
+      {
+        id:tokenId.toString()
+      },
+      user.role as Role
+    )
+    if(!token) {
+      throw new Error('Failed to generate token');
+    }
+    console.log("🚀 ~ UserService ~ login ~ token:", token)
     return {
       id: user.id,
       username: user.username,
       role: user.role,
       email: user.email,
-      token,
+      token:token.accessToken,
     };
 }
 
