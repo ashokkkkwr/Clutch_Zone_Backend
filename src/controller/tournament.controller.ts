@@ -58,8 +58,16 @@ class TournamentController{
     async fetchBrackets(req: Request, res: Response){
         const {id} = req.params;
         console.log("🚀 ~ TournamentController ~ fetchBrackets ~ id:", id)
-        const bracket = await tournament.getBracket(id);
+        const bracket = await tournament.getTournamentBracket(Number(id));
+        console.log("🚀 ~ TournamentController ~ fetchBrackets ~ bracket:", bracket)
         return res.status(200).json(bracket);
     } 
+    async registerTournament(req:Request,res:Response){
+        const {id} = req.params;
+        const userId = req?.user?.id;
+
+        const register = await tournament.registerTournament(userId!,id)
+        console.log("🚀 ~ TournamentController ~ registerTournament ~ register:", register)
+    }
 }
 export default new TournamentController();

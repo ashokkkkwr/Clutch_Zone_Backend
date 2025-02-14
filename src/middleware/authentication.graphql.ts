@@ -15,18 +15,14 @@ export const authenticateGraphql = async (
   next: NextFunction
 ) => {
   const authHeader = req.headers.authorization;
-  console.log("🚀 ~ authHeader:", authHeader);
-
-  if (!authHeader) {
-    return { user: null };
-  }
-
-  const token = authHeader.split(" ")[1];
-  console.log("🚀 ~ token:", token);
+if (!authHeader) {
+  return { user: null };
+}
+const token = authHeader.split(" ")[1];
 
   try {
+
     const payload = webTokenService.verify(token, DotenvConfig.ACCESS_TOKEN_SECRET);
-    console.log("🚀 ~ payload:", payload);
 
     if (!payload || typeof payload !== "object" || !("id" in payload)) {
       throw new Error("Invalid token payload");
@@ -34,7 +30,10 @@ export const authenticateGraphql = async (
 
     req.user = payload; // Attach user to the request
     return { user: payload }; // Return user
-  } catch (error) {
+  } catch (error:unknown) {
+    if(error instanceof Error){
+      throw HttpException.badRequest(error.message)
+    }
     throw HttpException.unauthorized("Invalid or expired Token");
   }
 };

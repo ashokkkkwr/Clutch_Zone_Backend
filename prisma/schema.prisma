@@ -12,7 +12,6 @@ model games {
   game_cover_image String?          @map("game_cover_image")
   game_icon       String?           @map("game_icon")
   tournaments     tournament[]
-  tournament_registration tournament_registration[]
   in_game_ids     in_game_id[]
 }
 model in_game_id {
@@ -48,31 +47,53 @@ model teams {
   slug                String?
   wins                Int                @default(0)
   tournaments_played  Int                @default(0) @map("tournaments_played")
-  team_leader         Int
-  user                user               @relation(fields: [team_leader], references: [id])
+ 
+
   team_players        team_players[]
-  tournament_registrations tournament_registration[]
+
+  Participant Participant[]
+
+  matchesAsTeam1 Match[] @relation(name: "Team1")
+matchesAsTeam2 Match[] @relation(name: "Team2")
+  Match Match[] @relation(name: "WinnerTeam")
+
+  TeamJoinRequest TeamJoinRequest[]
 }
-model team_players {
-  id      Int    @id @default(autoincrement())
-  role    String @default("player") @map("role")
+
+model TeamJoinRequest{
+  id Int @id @default(autoincrement())
   team_id Int
   user_id Int
-  team    teams  @relation(fields: [team_id], references: [id])
-  user    user   @relation(fields: [user_id], references: [id])
+    status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  team      teams         @relation(fields: [team_id], references: [id])
+  user      user          @relation(fields: [user_id], references: [id])
+
+  @@map("team_join_requests") 
 }
-model time_slots {
-  id                    Int                        @id @default(autoincrement())
-  start_time            String                     @map("start_time")
-  end_time              String                     @map("end_time")
-  max_no_of_participants Int                       @map("max_no_of_participants")
-  start_time_number     String?                    @map("start_time_number")
-  end_time_number       String?                    @map("end_time_number")
-  tournament_id         Int
-  tournament            tournament                 @relation(fields: [tournament_id], references: [id])
-  tournament_results    tournament_result[]
-  tournament_registrations tournament_registration[] // New field added
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
+
+model team_players {
+  id      Int            @id @default(autoincrement())
+  role    TeamPlayerRole @default(PLAYER) @map("role")
+  team_id Int 
+  user_id Int   @unique
+  team    teams          @relation(fields: [team_id], references: [id])
+  user    user           @relation(fields: [user_id], references: [id])
+}
+
+enum TeamPlayerRole {
+  PLAYER
+  TEAM_LEADER
+}
+
+
 model tournament_history {
   id Int @id @default(autoincrement())
   tournamentId Int
@@ -97,15 +118,17 @@ model tournament {
   games_id                        Int
   total_player                  Int
   games                           games @relation(fields: [games_id], references: [id])
-  time_slots                      time_slots[]
+ 
   prize_pools                     prize_pool[]
-  tournament_registrations        tournament_registration[]
   tournament_results              tournament_result[]
   tournament_history              tournament_history[]
   bracket                         Bracket?            // Relation without `fields` or `references`
-
+participants                    Participant[]
+  matches                         Match[]
   createdAt                       DateTime            @default(now())
   updatedAt                       DateTime            @updatedAt
+winnerId                        Int?                // New field to store the winner
+  winner                          user?               @relation(fields: [winnerId], references: [id])
 }
 
 model Bracket {
@@ -115,36 +138,103 @@ model Bracket {
   tournament    tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   user_id         Int?
   user            user?       @relation(fields: [user_id], references: [id])
-    createdAt     DateTime    @default(now())
+  createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
 }
+enum TournamentStatus {
+  UPCOMING
+  IN_PROGRESS
+  COMPLETED
+}
 
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+} 
+model Match {
+  id              Int       @id @default(autoincrement())
+  tournament      tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId    Int
+  round           Int
+  position        Int
+  player1Id       Int?
+  player2Id       Int?
+  winnerId        Int?
+  player1         user?     @relation(name: "Player1", fields: [player1Id], references: [id])
+  player2         user?     @relation(name: "Player2", fields: [player2Id], references: [id])
+  winner          user?     @relation(name: "Winner", fields: [winnerId], references: [id])
+  team1Id         Int?
+  team2Id         Int?
+  winnerTeamId    Int?
+  team1       teams?    @relation(name: "Team1", fields: [team1Id], references: [id])
+  team2       teams?    @relation(name: "Team2", fields: [team2Id], references: [id])
+  winnerTeam  teams?    @relation(name: "WinnerTeam", fields: [winnerTeamId], references: [id])
+  
+  
+  status          MatchStatus @default(SCHEDULED)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  match_time   DateTime? 
 
+  @@unique([tournamentId, round, position])
+  @@map("matches")
+}
+model user {
+  id                Int                 @id @default(autoincrement())
+  username          String
+  email             String              @unique
+  google_id         String?             @map("google_id")
+  password          String
+  role              String              @default("USER")
+  avatar            String              @default("uploads/avatar/avatar.png")
+  bio               String?
+  wins              Int                 @default(0)
+  tournaments_played Int                @default(0) @map("tournaments_played")
+  otp               String?
+  otpExpiration     DateTime?
+  wallet            wallet[]
+  team_players      team_players?
+  notifications     notification[]
+  in_game_ids       in_game_id[]
+  Withdraw_request  withdraw_request[]
+  gear_purchases    gear_purchase[]
+  top_up_transactions top_up_transaction[]
+  purchases         gear_transaction[]
 
+  Bracket           Bracket[]
+  participants      Participant[]
+  matchesAsPlayer1  Match[] @relation(name: "Player1")
+  matchesAsPlayer2  Match[] @relation(name: "Player2")
+  matchesAsWinner   Match[] @relation(name: "Winner")
+  tournament        tournament[]
 
+  TeamJoinRequest TeamJoinRequest[]
+}
 
+model Participant {
+  id          Int       @id @default(autoincrement())
+  userId      Int?
+  user        user?      @relation(fields: [userId], references: [id])
+  teamId   Int?
+  team        teams?    @relation(fields: [teamId], references: [id]) 
+  tournament  tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId Int
+  seed        Int?
+  createdAt   DateTime  @default(now())
+  
+  @@unique([userId, tournamentId])
+  @@map("participants")
+}
 model tournament_result {
   id            Int       @id @default(autoincrement())
   placement     String?
   tournament_id Int
   time_slot_id  Int
   tournament    tournament @relation(fields: [tournament_id], references: [id])
-  time_slots    time_slots @relation(fields: [time_slot_id], references: [id])
 }
-model tournament_registration {
-  id              Int       @id @default(autoincrement())
-  tournament_id   Int
-  user_id         Int
-  team_id         Int?
-  game_id         Int
-  time_slot_id    Int
-  tournament      tournament @relation(fields: [tournament_id], references: [id])
-  user            user       @relation(fields: [user_id], references: [id])
-  teams           teams?     @relation(fields: [team_id], references: [id])
-  games           games      @relation(fields: [game_id], references: [id])
-  time_slots      time_slots @relation(fields: [time_slot_id], references: [id])
-}
+
 model wallet {
   id        Int     @id @default(autoincrement())
   balance   Float   @default(0.0)
@@ -164,32 +254,7 @@ model withdraw_request {
   user_id             Int
   user                user     @relation(fields: [user_id], references: [id])
 }
-model user {
-  id                Int                @id @default(autoincrement())
-  username          String
-  email             String              @unique
-  google_id         String?            @map("google_id")
-  password          String
-  role  String @default("USER") // Use Prisma enums for stricter typing if needed
-  avatar            String             @default("uploads/avatar/avatar.png")
-  bio               String?
-  wins              Int                @default(0)
-  tournaments_played Int               @default(0) @map("tournaments_played")
-  otp               String?
-  otpExpiration     DateTime?
-  wallet            wallet[]
-  teams             teams[]
-  team_players      team_players[]
-  tournament_registrations tournament_registration[]
-  notifications     notification[]
-  in_game_ids       in_game_id[]
-  Withdraw_request  withdraw_request[]
-   gear_purchases    gear_purchase[]
-  top_up_transactions top_up_transaction[]
-    purchases             gear_transaction[]
 
-  Bracket Bracket[]
-}
 enum Role {
   SUDO_ADMIN
   SUPER_ADMIN

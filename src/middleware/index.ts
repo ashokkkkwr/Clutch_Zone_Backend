@@ -64,12 +64,24 @@ const middleware = async (app: Application) => {
   const graphqlServer = new ApolloServer({
     typeDefs,
     resolvers,
-    introspection: true, // Enable introspection explicitly
-    
-
+    introspection: true,
   });
 
   await graphqlServer.start();
+  app.use(
+    '/graphql',
+    bodyParser.json(),
+    expressMiddleware(graphqlServer, {
+      context: async ({ req }) => {
+        const { user } = await authenticateGraphql(req, {} as Response, () => {});
+        console.log("🚀 ~ context: ~ user:", user)
+        if (!user) {
+          console.error("User not authenticated");
+        }
+        return { req, user };
+      },
+    })
+  );
 
 const findIfExists= await prisma.user.findFirst({
   where:{
@@ -95,21 +107,7 @@ const password='admin'
       }
     })
   }
-  app.use(
-    '/graphql',
-    bodyParser.json(),
-    expressMiddleware(graphqlServer, {
-      context: async ({ req }) => {
-        const { user } = await authenticateGraphql(req, {} as Response, () => {});
-        if (!user) {
-          console.error("User not authenticated");
-        }
-        console.log('authenticated user')
-        console.log(user)
-        return { req, user };
-      },
-    })
-  );
+ 
   
   
   
