@@ -4,9 +4,10 @@ import tournament from '../services/tournament.service';
 import {Request,Response} from 'express';
 class TournamentController{
     async createTournament(req:Request,res:Response){
-        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player}=req.body;
+        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePools}=req.body;
         const files =req.files as {[fieldname:string]:Express.Multer.File[]}|undefined;
         const baseUrl = `${req.protocol}://${req.get('host')}`
+        const prizePoolsArray = JSON.parse(prizePools);
 
 
         // Construct the full URLs for gameCoverImage and gameIcon
@@ -18,11 +19,14 @@ class TournamentController{
             : null;
 
 
-
+          console.log(typeof(prizePools))  
+         
 
         console.log("🚀 ~ TournamentController ~ createTournament ~ tournament_cover:", tournament_cover)
         console.log("🚀 ~ TournamentController ~ createTournament ~ total_player:", total_player)
-        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,)
+        
+
+        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePoolsArray)
         return res.status(201).json({message:'Tournament created successfully',data:saved});
     }
     async updateTournament(req:Request,res:Response){

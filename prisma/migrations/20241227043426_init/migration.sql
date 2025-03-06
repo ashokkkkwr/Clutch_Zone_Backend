@@ -56,13 +56,13 @@ CREATE TABLE "teams" (
 );
 
 -- CreateTable
-CREATE TABLE "team_players" (
+CREATE TABLE "teamPlayers" (
     "id" SERIAL NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'player',
     "team_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
 
-    CONSTRAINT "team_players_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "teamPlayers_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -272,10 +272,10 @@ ALTER TABLE "prize_pool" ADD CONSTRAINT "prize_pool_tournament_id_fkey" FOREIGN 
 ALTER TABLE "teams" ADD CONSTRAINT "teams_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "team_players" ADD CONSTRAINT "team_players_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "teamPlayers" ADD CONSTRAINT "teamPlayers_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "team_players" ADD CONSTRAINT "team_players_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "teamPlayers" ADD CONSTRAINT "teamPlayers_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "time_slots" ADD CONSTRAINT "time_slots_tournament_id_fkey" FOREIGN KEY ("tournament_id") REFERENCES "tournament"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

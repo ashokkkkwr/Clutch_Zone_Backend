@@ -1,7 +1,7 @@
 /*
   Warnings:
 
-  - The `role` column on the `team_players` table would be dropped and recreated. This will lead to data loss if there is data in the column.
+  - The `role` column on the `teamPlayers` table would be dropped and recreated. This will lead to data loss if there is data in the column.
   - You are about to drop the column `team_leader_id` on the `teams` table. All the data in the column will be lost.
 
 */
@@ -20,7 +20,7 @@ ADD COLUMN     "winnerTeamId" INTEGER;
 ALTER TABLE "participants" ADD COLUMN     "teamId" INTEGER;
 
 -- AlterTable
-ALTER TABLE "team_players" DROP COLUMN "role",
+ALTER TABLE "teamPlayers" DROP COLUMN "role",
 ADD COLUMN     "role" "TeamPlayerRole" NOT NULL DEFAULT 'PLAYER';
 
 -- AlterTable

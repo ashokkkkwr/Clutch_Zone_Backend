@@ -17,10 +17,7 @@ import { PrismaClient } from '@prisma/client';
 import BcryptService from '../utils/bcryptService';
 
 const prisma = new PrismaClient();
-
-
 // Define the GraphQL Context interface
-
 interface GraphQLContext {
   req: Request;
   user?: {
@@ -88,7 +85,6 @@ const findIfExists= await prisma.user.findFirst({
     email: 'admin@gmail.com'
   }
 })
-  console.log("🚀 ~ middleware ~ findIfExists:", findIfExists)
 const password='admin'
   const hash = await BcryptService.hash(password);
   // const detele= await prisma.user.delete({

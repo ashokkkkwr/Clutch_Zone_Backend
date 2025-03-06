@@ -3,6 +3,7 @@ import game from './games.route'
 import tournament from './tournament.route'
 import gear from './gear.route'
 import team from './team.route'
+import payment from './payment.route'
 export interface Route {
   path: string
   route: Router
@@ -24,6 +25,10 @@ const routes: Route[] = [
   {
     path:'/team',
     route:team
+  },
+  {
+    path:'/payment',
+    route:payment
   }
 ]
 routes.forEach((route) => {
@@ -32,7 +37,7 @@ routes.forEach((route) => {
 router.get('/', (req: Request, res: Response) => {
   res.send({
     success: true,
-    message: 'Welcome to NOTEFLOW API.',
+    message: 'Welcome to ClutchZone  API.',
   })
 })
 export default router

@@ -4,27 +4,33 @@ const prisma = new PrismaClient()
 
 class GearService{
     async createGear(name:string,description:string,price:string,stock:string,image:string){
-        if(!name || !description || !price || !stock || !image){
-            throw HttpException.badRequest('Fields Empty')
-        }
-        const exists = await prisma.gear.findFirst({
-            where:{
-                name
+        try{
+            if(!name || !description || !price || !stock || !image){
+                throw HttpException.badRequest('Fields Empty')
             }
-        })
-        if(exists){
-            throw HttpException.conflict('Gear already exists');
-        }
-        const newGear=await prisma.gear.create({
-            data:{
-                name,
-                price:parseInt(price),
-                stock:parseInt(stock),
-                description,
-                image
+            const exists = await prisma.gear.findFirst({
+                where:{
+                    name
+                }
+            })
+            if(exists){
+                throw HttpException.conflict('Gear already exists');
             }
-        })
-        return newGear
+            const newGear=await prisma.gear.create({
+                data:{
+                    name,
+                    price:parseInt(price),
+                    stock:parseInt(stock),
+                    description,
+                    image
+                }
+            })
+            return newGear
+        }catch(error){
+            console.log("🚀 ~ GearService ~ createGear ~ error:", error)
+            
+        }
+        
     }
     async getGear(){
         const gear = await prisma.gear.findMany();

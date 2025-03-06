@@ -5,13 +5,21 @@ import team from '../services/team.service';
 import {Request, Response} from 'express';
 class TeamController {
   async createTeam(req: Request, res: Response) {
+    const baseUrl = `${req.protocol}://${req.get('host')}`
+
     const userId = req.user?.id;
     console.log('🚀 ~ TeamController ~ createTeam ~ userId:', userId);
 
     const files = req.files as {[fieldname: string]: Express.Multer.File[]} | undefined;
-    const team_icon = files?.['image'] ? files['image'][0].path : '';
+    const team_icon = files?.['image']
+    ? `${baseUrl}/${files['image'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
+    : null;
+    
+    
     console.log('🚀 ~ TeamController ~ createTeam ~ team_icon:', team_icon);
-
+if(!team_icon){
+  throw new Error('team icon is required')
+}
     const {team_name, max_players, slug} = req.body;
     console.log('🚀 ~ TeamController ~ createTeam ~ slug:', slug);
     console.log('🚀 ~ TeamController ~ createTeam ~ max_players:', max_players);
@@ -31,7 +39,7 @@ class TeamController {
   //   tournaments_played  Int                @default(0) @map("tournaments_played")
   //   user_id             Int
   //   user                user               @relation(fields: [user_id], references: [id])
-  //   team_players        team_players[]
+  //   teamPlayers        teamPlayers[]
   //   tournament_registrations tournament_registration[]
 
   // async createTournament(req:Request,res:Response){

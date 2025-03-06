@@ -6,6 +6,7 @@ import webTokenService from '../utils/webToken.service'
 
 export const authentication = () => {
   return (req: Request, res: Response, next: NextFunction) => {
+    console.log('ya?')
     /**
      * extracts the authorization header from the request and split it by spaces.
      * The result is an array('tokens') where the first element should be token

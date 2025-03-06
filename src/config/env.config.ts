@@ -7,7 +7,7 @@ export class DotenvConfig {
   static PORT = +process.env.PORT!
 
   // frontend
-  static FRONTEND_URL = process.env.FRONTEND_URL
+  // static FRONTEND_URL = process.env.FRONTEND_URL
   // *Database Configurations
   static DATABASE_HOST = process.env.DATABASE_HOST
   static DATABASE_PORT = +process.env.DATABASE_PORT!
@@ -53,4 +53,20 @@ export class DotenvConfig {
 
   // *API key for testing in postman or other tools
   static API_KEY = process.env.API_KEY
+
+
+
+
+// 
+
+static ESEWA_PAYMENT_URL=process.env.ESEWA_PAYMENT_URL!
+static ESEWA_VERIFICATION_URL=process.env.ESEWA_VERIFICATION_URL!
+static ESEWA_MERCHANT_ID=process.env.ESEWA_MERCHANT_ID
+static ESEWA_PRODUCT_CODE=process.env.ESEWA_PRODUCT_CODE
+static ESEWA_SECRET_KEY=process.env.ESEWA_SECRET_KEY
+static FRONTEND_URL=process.env.FRONTEND_URL
+static SUCCESS_URL=process.env.SUCCESS_URL
+static FAILURE_URL=process.env.FAILURE_URL
+
+
 }
