@@ -103,11 +103,6 @@ const password='admin'
       }
     })
   }
- 
-  
-  
-  
-
   app.use('/api', routes);
   app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')));
   console.log('Static files path:', path.join(__dirname, '..', '..', 'uploads'));

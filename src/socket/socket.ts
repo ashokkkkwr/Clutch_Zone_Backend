@@ -5,14 +5,14 @@ import webTokenService from '../utils/webToken.service';
 import { DotenvConfig } from '../config/env.config';
 
 export class ChatSocket {
-  private userSockets = new Map(); // Store user socket mappings
+  private userSockets = new Map();
 
  
 
   setupSocket(server: any) {
     const io = new Server(server, {
       cors: {
-        origin: '*', // You can restrict this in production
+        origin: '*', 
       },
     });
     console.log('🚀 Socket.IO server initialized');
@@ -40,22 +40,27 @@ export class ChatSocket {
     });
 
     io.on('connection', async (socket) => {
-      const userId = socket.data.user.id;
-      console.log('🚀 New connection from user ID:', userId); // Log new connection
+      console.log(socket);
+      const token = socket.handshake.auth.token;
+      console.log(token,"yo chai token ho la")
+      const payload = webTokenService.verify(token, DotenvConfig.ACCESS_TOKEN_SECRET);
+      const userId = payload.id;
+      console.log(payload,'this is playload')
+      console.log('🚀 New connection from user ID:', userId);
       this.userSockets.set(userId, socket.id);
 
       socket.on('disconnect', () => {
-        console.log(`User ${userId} disconnected`); // Log disconnection
+        console.log(`User ${userId} disconnected`);
         this.userSockets.delete(userId);
       });
-      console.log('Current userSockets map:', this.userSockets); // Log the map to verify
+      console.log('Current userSockets map:', this.userSockets); 
     });
 
     return io; // Return the Socket.io instance
   }
  getUserSocket(id:string){
-    console.log("🚀 ~ ChatSocket ~ getUserSocket ~ id:", id)
-    console.log(this.userSockets.get(id))
+    console.log("🚀 ~ ChatSocket ~ getUserSocket ~ id:", id);
+    console.log(this.userSockets.get(id));
     console.log(this.userSockets,"use sockets")
     return this.userSockets
   }
