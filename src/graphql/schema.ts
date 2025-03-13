@@ -7,6 +7,7 @@ export const typeDefs = gql`
     role: String!
     email: String
     token: String
+    bio: String
   }
 
   type Game {
@@ -140,6 +141,7 @@ export const typeDefs = gql`
   }
 
   type Mutation {
+  updateBio:User
     register(username: String!, email: String!, password: String!): User
     verifyOtp(otp: String!, email: String!): Boolean
     login(email: String!, password: String!): User

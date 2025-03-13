@@ -92,6 +92,12 @@ return gearService.getGear();
       const id = authenticateUser(context);
       return userService.userDetails(id);
     },
+    updateBio: async (_: any, {bio}: {bio: string}, context: any) => {
+      console.log('🚀 ~ registerTournamentId:', bio);
+      const userId = authenticateUser(context);
+      console.log('🚀 ~ userId:', userId);
+      return userService.updateBio(bio, userId);
+    },
     registerTournament: async (_: any, {id}: {id: string}, context: any) => {
       console.log('🚀 ~ registerTournamentId:', id);
       const userId = authenticateUser(context);

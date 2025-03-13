@@ -139,7 +139,6 @@ class UserService {
       token:token.accessToken,
     };
 }
-
 async userDetails(id: string) {
   // Convert the id to a number
   const numericId = Number(id);
@@ -158,6 +157,17 @@ async userDetails(id: string) {
 
   return userDetails;
 }
-
+async updateBio(id: string, bio: string){
+  if(!bio) throw new Error('Bio is required');
+  const user= await prisma.user.update({
+    where:
+    {
+      id:Number(id)
+    },data:{
+      bio:bio
+    }
+  })
+  return user
+}
 }
 export default new UserService();

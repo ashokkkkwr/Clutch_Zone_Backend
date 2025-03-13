@@ -14,6 +14,8 @@ model games {
   game_icon        String?      @map("game_icon")
   tournaments      tournament[]
   in_game_ids      in_game_id[]
+
+  game_favaurites game_favaurites[]
 }
 
 model in_game_id {
@@ -213,10 +215,10 @@ model user {
   matchesAsPlayer2 Match[]       @relation(name: "Player2")
   matchesAsWinner  Match[]       @relation(name: "Winner")
   tournament       tournament[]
-
   TeamJoinRequest TeamJoinRequest[]
-
   payment_bucks_transaction payment_bucks_transaction[]
+
+  game_favaurites game_favaurites[]
 }
 
 model Participant {
@@ -354,4 +356,13 @@ model payment_bucks_transaction {
   payment_bucks_id Int
   user             user          @relation(fields: [user_id], references: [id])
   payment_bucks    payment_bucks @relation(fields: [payment_bucks_id], references: [id])
+}
+
+model game_favaurites{
+  id Int @id @default(autoincrement())
+  user_id Int
+  user             user          @relation(fields: [user_id], references: [id])
+  game_id Int
+  games            games          @relation(fields: [game_id], references: [id])
+
 }
