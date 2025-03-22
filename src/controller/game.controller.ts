@@ -8,14 +8,11 @@ import gameService from '../services/game.service';
  class GameController {
     async createGame(req: Request, res: Response) {
         const { game_name } = req.body;
-        console.log("🚀 ~ GameController ~ createGame ~ game_name:", game_name);
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-        // Get the base URL dynamically from the request
         const baseUrl = `${req.protocol}://${req.get('host')}`;
     
         // Construct the full URLs for gameCoverImage and gameIcon
-        const gameCoverImage = files?.['game_cover_image']
-            ? `${baseUrl}/${files['game_cover_image'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
+        const gameCoverImage = files?.['game_cover_image'] ? `${baseUrl}/${files['game_cover_image'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
             : null;
         console.log("🚀 ~ GameController ~ createGame ~ gameCoverImage:", gameCoverImage);
         const gameIcon = files?.['game_icon']

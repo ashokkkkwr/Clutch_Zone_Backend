@@ -4,7 +4,8 @@ import tournament from '../services/tournament.service';
 import {Request,Response} from 'express';
 class TournamentController{
     async createTournament(req:Request,res:Response){
-        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePools}=req.body;
+        console.log(req.body)
+        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePools, is_points_based,total_rounds}=req.body;
         const files =req.files as {[fieldname:string]:Express.Multer.File[]}|undefined;
         const baseUrl = `${req.protocol}://${req.get('host')}`
         const prizePoolsArray = JSON.parse(prizePools);
@@ -26,7 +27,7 @@ class TournamentController{
         console.log("🚀 ~ TournamentController ~ createTournament ~ total_player:", total_player)
         
 
-        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePoolsArray)
+        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePoolsArray, is_points_based,total_rounds)
         return res.status(201).json({message:'Tournament created successfully',data:saved});
     }
     async updateTournament(req:Request,res:Response){
@@ -72,6 +73,11 @@ class TournamentController{
 
         const register = await tournament.registerTournament(userId!,id)
         console.log("🚀 ~ TournamentController ~ registerTournament ~ register:", register)
+    }
+    async getUserMatches(req:Request,res:Response){
+        const userId = req.user?.id;
+        const matches = await tournament.getUserMatches(userId!);
+        return res.status(200).json(matches);
     }
 }
 export default new TournamentController();

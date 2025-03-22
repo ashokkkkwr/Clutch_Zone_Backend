@@ -8,6 +8,7 @@ const router:IRouter=Router()
 router.post('/create',tournamentImagesUpload.fields([{name:'tournament_icon'},{name:'tournament_cover'}]),catchAsync(tournamentController.createTournament))
 router.get('/bracket/:id',tournamentController.fetchBrackets)
 router.post('/register/:id',authentication(),catchAsync(tournamentController.registerTournament))
+router.get('/matches',authentication(),tournamentController.getUserMatches)
 
 
 

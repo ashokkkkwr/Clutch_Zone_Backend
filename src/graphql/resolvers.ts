@@ -41,6 +41,10 @@ return gearService.getGear();
       const userId = authenticateUser(context);
       return teamService.getOwnTeamDetails(userId);
     },
+    getMyTournament:(_:any,args:any,context:any)=>{
+      const userId=authenticateUser(context);
+      return tournamentService.getMyTournament(userId)
+    },
     getClutchBucks:async(_:any, args:any,context:any)=>{
       const clutchLists=await  paymentService.getClutchBucks();
       console.log("🚀 ~ clutchLists:", clutchLists)

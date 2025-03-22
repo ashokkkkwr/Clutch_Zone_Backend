@@ -4,6 +4,8 @@ import tournament from './tournament.route'
 import gear from './gear.route'
 import team from './team.route'
 import payment from './payment.route'
+import profile from './profile.route'
+import scoreSubmission from './scoreSubmisson.route'
 export interface Route {
   path: string
   route: Router
@@ -29,6 +31,14 @@ const routes: Route[] = [
   {
     path:'/payment',
     route:payment
+  },
+  {
+    path:'/profile',
+    route:profile
+  },
+  {
+    path:'/scoreSubmission',
+    route:scoreSubmission
   }
 ]
 routes.forEach((route) => {

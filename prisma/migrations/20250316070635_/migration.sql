@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "user" ADD COLUMN     "current_level" INTEGER NOT NULL DEFAULT 1,
+ADD COLUMN     "location" TEXT,
+ADD COLUMN     "xp" INTEGER NOT NULL DEFAULT 0;

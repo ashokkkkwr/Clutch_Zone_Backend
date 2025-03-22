@@ -31,7 +31,7 @@ const tournamentIconImagesPath = "uploads/tournamentIconImages";
 const tournamentCoverImagesPath = "uploads/tournamentCoverImages";
 const gearImagesPath="uploads/gearImages";
 const bucksPath="uploads/buckImages"
-
+const scoreSubmissionPath="uploads/scoreSubmissionImages";
 const teamImagePath="uploads/teamImages";
 // Ensure folders exist
 ensureDirectoryExistence(gameCoverImagesPath);
@@ -41,6 +41,7 @@ ensureDirectoryExistence(tournamentCoverImagesPath);
 ensureDirectoryExistence(gearImagesPath);
 ensureDirectoryExistence(teamImagePath);
 ensureDirectoryExistence(bucksPath)
+ensureDirectoryExistence(scoreSubmissionPath)
 
 const gameStorage= multer.diskStorage({
   destination: (req, file, cb) => {
@@ -51,6 +52,16 @@ const gameStorage= multer.diskStorage({
       cb(null, gameIconImagesPath);
     }
    
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+})
+const scoreSubmissionStorage= multer.diskStorage({
+  destination: (req, file, cb) => {
+    if(file.fieldname==='score_submission_image'){
+      cb(null,scoreSubmissionPath );
+    }
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
@@ -119,6 +130,10 @@ const fileFilter = (req: any, file: any, cb: any) => {
 
 export const gamesImagesUpload = multer({
   storage: gameStorage,
+  fileFilter: fileFilter,
+});
+export const scoreSubmissionUpload = multer({
+  storage: scoreSubmissionStorage,
   fileFilter: fileFilter,
 });
 export const tournamentImagesUpload = multer({
