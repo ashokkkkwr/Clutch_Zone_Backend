@@ -4,7 +4,7 @@ import tournament from '../services/tournament.service';
 import {Request,Response} from 'express';
 class TournamentController{
     async createTournament(req:Request,res:Response){
-        console.log(req.body)
+        console.log(req.body,'req')
         const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePools, is_points_based,total_rounds}=req.body;
         const files =req.files as {[fieldname:string]:Express.Multer.File[]}|undefined;
         const baseUrl = `${req.protocol}://${req.get('host')}`

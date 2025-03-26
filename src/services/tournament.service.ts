@@ -11,10 +11,10 @@ class TournamentService {
     tournament_name: string,
     tournament_description: string,
     tournament_entry_fee: string,
-    tournament_start_date: string,
-    tournament_end_date: string,
-    tournament_registration_start_date: string,
-    tournament_registration_end_date: string,
+    tournament_start_date: Date,
+    tournament_end_date: Date,
+    tournament_registration_start_date: Date,
+    tournament_registration_end_date: Date,
     tournament_game_mode: string,
     tournament_streaming_link: string,
     games_id: string,
@@ -32,10 +32,10 @@ class TournamentService {
     } catch (error) {}
     console.log('🚀 ~ TournamentService ~ total_player:', total_player);
     const validPlayers = [2, 4, 8, 16, 32];
-    tournament_registration_start_date = new Date(tournament_registration_start_date).toISOString();
-    tournament_registration_end_date = new Date(tournament_registration_end_date).toISOString();
-    tournament_start_date = new Date(tournament_start_date).toISOString();
-    tournament_end_date = new Date(tournament_end_date).toISOString();
+    tournament_registration_start_date = new Date(tournament_registration_start_date);
+    tournament_registration_end_date = new Date(tournament_registration_end_date);
+    tournament_start_date = new Date(tournament_start_date);
+    tournament_end_date = new Date(tournament_end_date);
     if (!is_points_based) {
       if (!validPlayers.includes(parseInt(total_player))) {
         throw HttpException.badRequest(
@@ -55,16 +55,18 @@ class TournamentService {
 
           tournament_registration_start_date,
           tournament_registration_end_date,
-          tournament_start_date,
-          tournament_end_date,
+         
           tournament_game_mode,
           tournament_streaming_link,
           games_id: parseInt(games_id),
           total_player: parseInt(total_player),
           is_points_based: is_points_based?.toString() === 'true',
           total_rounds: Number(totalRounds),
+          tournament_start_date,
+          tournament_end_date
         },
       });
+      console.log("🚀 ~ TournamentService ~ tournament:", tournament)
       const rightnow= await prisma.tournament.findUnique({
         where:{
             id:tournament.id
@@ -111,6 +113,7 @@ class TournamentService {
         games: true,
       },
     });
+
     console.log('🚀 ~ TournamentService ~ getTournaments ~ tournaments:', tournaments);
     return tournaments;
   }
@@ -128,13 +131,7 @@ class TournamentService {
         games: true,
       },
     });
-    const tournament = await prisma.tournament.findMany({
-      include: {
-        games: true,
-      },
-    });
-    console.log('🚀 ~ TournamentService ~ getTournaments ~ tournaments:', tournament);
-    console.log('🚀 ~ TournamentService ~ getUpcommingTournaments ~ tournaments:', tournaments);
+    console.log("🚀 ~ TournamentService ~ getUpcommingTournaments ~ tournaments:", tournaments)
     return tournaments;
   }
   async getOngoingTournaments() {
@@ -483,13 +480,11 @@ class TournamentService {
           position: participant.id, // Unique per round
           match_time: tournament.tournament_start_date,
         };
-  
         if (isTeamTournament) {
           matchData.team1Id = participant.teamId!;
         } else {
           matchData.player1Id = participant.userId!;
         }
-  
         matchesData.push(matchData);
       });
     }
@@ -776,7 +771,6 @@ class TournamentService {
         participants: true, // Include participants if needed
       },
     });
-
     console.log('🚀 ~ TournamentService ~ mero tourni ~ tournaments:', tournaments);
     return tournaments;
   }

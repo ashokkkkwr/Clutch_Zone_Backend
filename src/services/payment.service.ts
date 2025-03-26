@@ -100,6 +100,10 @@ class PaymentService {
     buckImage: string,
     bonus:string
   ) {
+    console.log("🚀 ~ PaymentService ~ bonus:", bonus)
+    try{
+
+    
     console.log('🚀 ~ PaymentService ~ createBucks ~ userId:', userId);
     console.log('🚀 ~ PaymentService ~ createBucks ~ description:', description);
     console.log('🚀 ~ PaymentService ~ createBucks ~ amount:', amount);
@@ -122,7 +126,11 @@ class PaymentService {
         bonus:Number(bonus)
       },
     });
+    console.log('create vayena ra?')
     return create;
+  }catch(error){
+    console.log('🚀 ~ PaymentService ~ createBucks ~ error:', error)  ;
+  }
   }
   async getClutchBucks(){
     const bucksLists= await prisma.payment_bucks.findMany()

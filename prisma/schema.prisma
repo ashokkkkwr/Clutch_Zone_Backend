@@ -4,9 +4,8 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
 }
-
 model games {
   id               Int          @id @default(autoincrement())
   game_name        String       @map("game_name")
@@ -114,8 +113,6 @@ model tournament {
   tournament_registration_end_date   DateTime  @map("tournament_registration_end_date")
   tournament_start_date              DateTime  @map("tournament_start_date")
   tournament_end_date                DateTime  @map("tournament_end_date")
-  tournament_start_date_number       DateTime? @map("tournament_start_date_number")
-  tournament_end_date_number         DateTime? @map("tournament_end_date_number")
   tournament_game_mode               String    @map("tournament_game_mode")
   tournament_streaming_link          String?   @map("tournament_streaming_link")
   featured_tournament                Boolean   @default(false) @map("featured_tournament")
@@ -196,7 +193,6 @@ model Match {
   @@unique([tournamentId, round, position])
   @@map("matches")
 }
-
 model ScoreSubmission {
   id            Int              @id @default(autoincrement())
   matchId       Int
@@ -212,7 +208,6 @@ model ScoreSubmission {
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
 }
-
 enum SubmissionStatus {
   PENDING
   APPROVED
@@ -253,6 +248,7 @@ model user {
   tournament                tournament[]
   TeamJoinRequest           TeamJoinRequest[]
   payment_bucks_transaction payment_bucks_transaction[]
+  createdAt    DateTime   @default(now())
 
   game_favaurites game_favaurites[]
 }

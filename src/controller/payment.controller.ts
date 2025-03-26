@@ -6,6 +6,9 @@ import { Request,Response } from 'express';
 import paymentService from '../services/payment.service';
 class PaymentController{
     async createBucks(req:Request,res:Response){
+        try{
+
+        
          const baseUrl = `${req.protocol}://${req.get('host')}`
         const userId = req.user?.id;
         if(!userId){
@@ -19,14 +22,14 @@ class PaymentController{
        const image = files?.['image']
        ? `${baseUrl}/${files['image'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
        : null;
-       
         if(!amount || !price || !description ||!userId || !image){
             throw new Error('All fields must be filled')
         }
-       
         const service = await paymentService.createBucks(amount,price,description,userId,image as string,bonus)
         res.status(200).json({Message:'successfully added Clutch bucks',data:service})
+    }catch(err:any){
+        res.status(400).json({Message:err.message}) 
     }
-    
+}
 }
 export default new PaymentController()
