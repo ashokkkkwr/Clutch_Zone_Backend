@@ -24,8 +24,8 @@ class TournamentService {
     is_points_based?: boolean,
     totalRounds?: number,
   ) {
-    console.log(is_points_based,'---------------------------------');
-    console.log(totalRounds,'---------------------------------');
+    console.log(is_points_based, '---------------------------------');
+    console.log(totalRounds, '---------------------------------');
 
     console.log('🚀 ~ TournamentService ~ prizePools:', prizePools);
     try {
@@ -55,7 +55,7 @@ class TournamentService {
 
           tournament_registration_start_date,
           tournament_registration_end_date,
-         
+
           tournament_game_mode,
           tournament_streaming_link,
           games_id: parseInt(games_id),
@@ -63,16 +63,16 @@ class TournamentService {
           is_points_based: is_points_based?.toString() === 'true',
           total_rounds: Number(totalRounds),
           tournament_start_date,
-          tournament_end_date
+          tournament_end_date,
         },
       });
-      console.log("🚀 ~ TournamentService ~ tournament:", tournament)
-      const rightnow= await prisma.tournament.findUnique({
-        where:{
-            id:tournament.id
-        }
-      })
-      console.log("🚀 ~ TournamentService ~ rightnow:", rightnow)
+      console.log('🚀 ~ TournamentService ~ tournament:', tournament);
+      const rightnow = await prisma.tournament.findUnique({
+        where: {
+          id: tournament.id,
+        },
+      });
+      console.log('🚀 ~ TournamentService ~ rightnow:', rightnow);
       //Create prizePools if provided
       if (prizePools && prizePools.length > 0) {
         console.log('ya saman?');
@@ -131,7 +131,7 @@ class TournamentService {
         games: true,
       },
     });
-    console.log("🚀 ~ TournamentService ~ getUpcommingTournaments ~ tournaments:", tournaments)
+    console.log('🚀 ~ TournamentService ~ getUpcommingTournaments ~ tournaments:', tournaments);
     return tournaments;
   }
   async getOngoingTournaments() {
@@ -227,16 +227,16 @@ class TournamentService {
   async getTournamentBracket(tournamentId: number) {
     console.log('🚀 ~ TournamentService ~ getTournamentBracket ~ tournamentId:', tournamentId);
     const tournament = await prisma.tournament.findUnique({
-        where: { id: tournamentId },
-        include: { matches: true },
-      });
-    
-      if (!tournament) throw HttpException.notFound('Tournament not found.');
-    
-      if (tournament.is_points_based) {
-        const leaderboard = await this.getLeaderboard(tournamentId.toString());
-        return { leaderboard, isPointsBased: true };
-      }
+      where: {id: tournamentId},
+      include: {matches: true},
+    });
+
+    if (!tournament) throw HttpException.notFound('Tournament not found.');
+
+    if (tournament.is_points_based) {
+      const leaderboard = await this.getLeaderboard(tournamentId.toString());
+      return {leaderboard, isPointsBased: true};
+    }
     const bracket = await prisma.tournament.findUnique({
       where: {id: tournamentId},
       include: {
@@ -288,23 +288,23 @@ class TournamentService {
     };
   }
   async getLeaderboard(tournamentId: string) {
-    console.log('ya xiro ni ta')
+    console.log('ya xiro ni ta');
     const tournament = await prisma.tournament.findUnique({
-      where: { id: Number(tournamentId) },
-      include: { participants: { include: { user: true, team: true } } },
+      where: {id: Number(tournamentId)},
+      include: {participants: {include: {user: true, team: true}}},
     });
-  
+
     if (!tournament) throw HttpException.notFound('Tournament not found');
-  
-    const isTeamTournament = tournament.participants.some(p => p.teamId !== null);
-  
+
+    const isTeamTournament = tournament.participants.some((p) => p.teamId !== null);
+
     const leaderboard = await prisma.participant.findMany({
-      where: { tournamentId: Number(tournamentId) },
-      orderBy: { points: 'desc' },
-      include: { user: true, team: true },
+      where: {tournamentId: Number(tournamentId)},
+      orderBy: {points: 'desc'},
+      include: {user: true, team: true},
     });
-  
-    return leaderboard.map(p => ({
+
+    return leaderboard.map((p) => ({
       id: isTeamTournament ? p.teamId : p.userId,
       name: isTeamTournament ? p.team?.team_name : p.user?.username,
       points: p.points,
@@ -350,14 +350,20 @@ class TournamentService {
         },
       });
       console.log('🚀 ~ TournamentService ~ returnprisma.$transaction ~ participant:', participant);
-      if (tournament.participants.length + 1 === tournament.total_player && tournament.is_points_based) {
-        console.log('point based ma xa')
+      if (
+        tournament.participants.length + 1 === tournament.total_player &&
+        tournament.is_points_based
+      ) {
+        console.log('point based ma xa');
         await this.initializePointsBasedMatches(tournament.id.toString(), tournament.total_rounds!);
       }
-      if (tournament.participants.length + 1 === tournament.total_player && !tournament.is_points_based) {
-        console.log('point based ma xaina')
+      if (
+        tournament.participants.length + 1 === tournament.total_player &&
+        !tournament.is_points_based
+      ) {
+        console.log('point based ma xaina');
         await this.initializeMatches(tournament_id);
-    }
+      }
       return;
     }
   }
@@ -456,24 +462,24 @@ class TournamentService {
         seed: teamParticipants + 1,
       },
     });
-   
+
     if (teamParticipants + 1 === tournament.total_player) {
       await this.initializeTeamMatches(tournament.id.toString());
     }
   }
   private async initializePointsBasedMatches(tournamentId: string, totalRounds: number) {
     const tournament = await prisma.tournament.findUnique({
-      where: { id: Number(tournamentId) },
-      include: { participants: { include: { user: true, team: true } } },
+      where: {id: Number(tournamentId)},
+      include: {participants: {include: {user: true, team: true}}},
     });
-  
+
     if (!tournament) throw HttpException.badRequest('Tournament not found');
-  
-    const isTeamTournament = tournament.participants.some(p => p.teamId !== null);
+
+    const isTeamTournament = tournament.participants.some((p) => p.teamId !== null);
     const matchesData: any[] = [];
-  
+
     for (let round = 1; round <= totalRounds; round++) {
-      tournament.participants.forEach(participant => {
+      tournament.participants.forEach((participant) => {
         const matchData: any = {
           tournamentId: tournament.id,
           round,
@@ -488,8 +494,8 @@ class TournamentService {
         matchesData.push(matchData);
       });
     }
-  
-    await prisma.match.createMany({ data: matchesData });
+
+    await prisma.match.createMany({data: matchesData});
     console.log('Points-based matches initialized.');
   }
 
@@ -545,17 +551,17 @@ class TournamentService {
 
       const tournament = await prisma.tournament.findUnique({
         where: {id: Number(tournamentId)},
-        include: {participants: true,matches:true},
+        include: {participants: true, matches: true},
       });
 
       if (!tournament) {
         throw HttpException.notFound('Tournament not found.');
       }
- // Check if matches already exist
- if (tournament.matches.length > 0) {
-    console.log('Matches already initialized. Skipping...');
-    return;
-}
+      // Check if matches already exist
+      if (tournament.matches.length > 0) {
+        console.log('Matches already initialized. Skipping...');
+        return;
+      }
       let players = tournament.participants.map((p) => p.userId);
 
       // Fisher-Yates Shuffle Algorithm for Randomizing Players
@@ -776,53 +782,107 @@ class TournamentService {
   }
 
   async getUserMatches(userId: string) {
-    
-   try{
-    const teamMemberships=await prisma.teamPlayers.findMany({
-        where:{
-            user_id:parseInt(userId),
-            
-        },
-        select:{
-            team_id:true
-        }
-    })
-    const teamIds = teamMemberships.map(t => t.team_id);
-     // Fetch matches involving the user (solo or team)
-     const matches = await prisma.match.findMany({
+    try {
+      const teamMemberships = await prisma.teamPlayers.findMany({
+        where: { user_id: parseInt(userId) },
+        select: { team_id: true },
+      });
+      const teamIds = teamMemberships.map((t) => t.team_id);
+  
+      const matches = await prisma.match.findMany({
         where: {
-            OR: [
-                { player1Id: Number(userId) },       // User is player1
-                { player2Id: Number(userId) },       // User is player2
-                { team1Id: { in: teamIds } },// User's team is team1
-                { team2Id: { in: teamIds } } // User's team is team2
-            ]
+          OR: [
+            { player1Id: Number(userId) },
+            { player2Id: Number(userId) },
+            { team1Id: { in: teamIds } },
+            { team2Id: { in: teamIds } },
+          ],
         },
         include: {
-            player1: true,
-            player2: true,
-            team1: true,
-            team2: true,
-            tournament: {
-                include: {
-                    games: true
-                }
-            },
-            winner: true,
-            winnerTeam: true
+          player1: true,
+          player2: true,
+          team1: { include: { teamPlayers: true } },
+          team2: { include: { teamPlayers: true } },
+          tournament: { include: { games: true } },
+          winner: true,
+          winnerTeam: true,
+          ScoreSubmission: true,
         },
-        orderBy: [
-            { tournamentId: 'asc' },
-            { round: 'asc' },
-            { position: 'asc' }
-        ]
-    });
-    return matches
-
-}catch(error){  
-    console.error('Error fetching user matches:', error);
-
-}
+        orderBy: [{ tournamentId: 'asc' }, { round: 'asc' }, { position: 'asc' }],
+      });
+  
+      // Process each match to calculate scores
+      const processedMatches = matches.map((match) => {
+        let player1Score = 0;
+        let player2Score = 0;
+        let team1Score = 0;
+        let team2Score = 0;
+        const isPointsBased = match.tournament.is_points_based;
+        const userHasSubmitted = match.ScoreSubmission.some(
+          (sub) => sub.submittedBy === Number(userId)
+        );
+        match.ScoreSubmission.forEach((submission) => {
+          if (submission.status !== 'APPROVED') return;
+  
+          if (isPointsBased) {
+            // Calculate points from kills and placement
+            const killPoints = submission.kills || 0;
+            let placementPoints = 0;
+            const placement = submission.placement || 0;
+            if (placement === 1) placementPoints = 12;
+            else if (placement === 2) placementPoints = 9;
+            else if (placement === 3) placementPoints = 7;
+            else if (placement <= 5) placementPoints = 5;
+            else if (placement <= 10) placementPoints = 3;
+            else if (placement <= 15) placementPoints = 2;
+            else if (placement <= 20) placementPoints = 1;
+            const totalPoints = killPoints + placementPoints;
+  
+            if (submission.isTeam) {
+              // Check which team the submitter belongs to
+              const inTeam1 = match.team1?.teamPlayers.some(tp => tp.user_id === submission.submittedBy);
+              if (inTeam1) team1Score += totalPoints;
+              else {
+                const inTeam2 = match.team2?.teamPlayers.some(tp => tp.user_id === submission.submittedBy);
+                if (inTeam2) team2Score += totalPoints;
+              }
+            } else {
+              // Solo submission
+              if (submission.submittedBy === match.player1Id) player1Score += totalPoints;
+              else if (submission.submittedBy === match.player2Id) player2Score += totalPoints;
+            }
+          } else {
+            // Elimination match, use playerScore
+            const score = submission.playerScore || 0;
+            if (submission.isTeam) {
+              const inTeam1 = match.team1?.teamPlayers.some(tp => tp.user_id === submission.submittedBy);
+              if (inTeam1) team1Score += score;
+              else {
+                const inTeam2 = match.team2?.teamPlayers.some(tp => tp.user_id === submission.submittedBy);
+                if (inTeam2) team2Score += score;
+              }
+            } else {
+              if (submission.submittedBy === match.player1Id) player1Score += score;
+              else if (submission.submittedBy === match.player2Id) player2Score += score;
+            }
+          }
+        });
+  
+        // Assign computed scores to the match object
+        return {
+          ...match,
+          player1Score: match.team1Id ? undefined : player1Score,
+          player2Score: match.team2Id ? undefined : player2Score,
+          team1Score: match.team1Id ? team1Score : undefined,
+          team2Score: match.team2Id ? team2Score : undefined,
+          scoreSubmitted: userHasSubmitted,
+        };
+      });
+      return processedMatches;
+    } catch (error) {
+      console.error('Error fetching user matches:', error);
+      throw error;
+    }
   }
 }
 export default new TournamentService();

@@ -15,6 +15,7 @@ export const resolvers = {
     getGames: () => {
       return gameService.getGames();
     },
+   
     getTournaments: () => {
       return tournamentService.getTournaments();
     },
@@ -40,6 +41,10 @@ return gearService.getGear();
     getOwnTeamDetails: (_: any, args: any, context: any) => {
       const userId = authenticateUser(context);
       return teamService.getOwnTeamDetails(userId);
+    },
+    getFavaurities: (_:any,args:any,context:any) => {
+      const userId = authenticateUser(context);
+      return gameService.getUnFavaurities(userId);
     },
     getMyTournament:(_:any,args:any,context:any)=>{
       const userId=authenticateUser(context);

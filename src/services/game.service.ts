@@ -33,6 +33,20 @@ async deleteGame(id:string){
         console.log("🚀 ~ GameService ~ deleteGame ~ deletedGame:", deletedGame)
         return deletedGame;
     }
+    async getUnFavaurities(userId: string) {
+        const unfavoritedGames = await prisma.games.findMany({
+            where: {
+                game_favaurites: {
+                    none: {
+                        user_id: parseInt(userId),
+                    },
+                },
+                
+            },
+        });
+        console.log("🚀 ~ GameService ~ getUnFavaurities ~ unfavoritedGames:", unfavoritedGames)
+        return unfavoritedGames;
+    }
 }
 
 

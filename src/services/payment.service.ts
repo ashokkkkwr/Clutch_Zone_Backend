@@ -98,60 +98,57 @@ class PaymentService {
     description: string,
     userId: string,
     buckImage: string,
-    bonus:string
+    bonus: string,
   ) {
-    console.log("🚀 ~ PaymentService ~ bonus:", bonus)
-    try{
-
-    
-    console.log('🚀 ~ PaymentService ~ createBucks ~ userId:', userId);
-    console.log('🚀 ~ PaymentService ~ createBucks ~ description:', description);
-    console.log('🚀 ~ PaymentService ~ createBucks ~ amount:', amount);
-    const user = await prisma.user.findUnique({
-      where: {
-        id: Number(userId),
-      },
-    });
-    if (user?.role !== 'admin') {
-      console.log('yua??');
-      throw new Error('Must be admin to perform this action.');
+    console.log('🚀 ~ PaymentService ~ bonus:', bonus);
+    try {
+      console.log('🚀 ~ PaymentService ~ createBucks ~ userId:', userId);
+      console.log('🚀 ~ PaymentService ~ createBucks ~ description:', description);
+      console.log('🚀 ~ PaymentService ~ createBucks ~ amount:', amount);
+      const user = await prisma.user.findUnique({
+        where: {
+          id: Number(userId),
+        },
+      });
+      if (user?.role !== 'admin') {
+        console.log('yua??');
+        throw new Error('Must be admin to perform this action.');
+      }
+      console.log('ya saman??');
+      const create = await prisma.payment_bucks.create({
+        data: {
+          amount: Number(amount),
+          price: Number(price),
+          description,
+          buckImage,
+          bonus: Number(bonus),
+        },
+      });
+      console.log('create vayena ra?');
+      return create;
+    } catch (error) {
+      console.log('🚀 ~ PaymentService ~ createBucks ~ error:', error);
     }
-    console.log('ya saman??');
-    const create = await prisma.payment_bucks.create({
-      data: {
-        amount: Number(amount),
-        price: Number(price),
-        description,
-        buckImage,
-        bonus:Number(bonus)
-      },
-    });
-    console.log('create vayena ra?')
-    return create;
-  }catch(error){
-    console.log('🚀 ~ PaymentService ~ createBucks ~ error:', error)  ;
   }
-  }
-  async getClutchBucks(){
-    const bucksLists= await prisma.payment_bucks.findMany()
-    console.log("🚀 ~ PaymentService ~ getClutchBucks ~ bucksLists:", bucksLists)
-    return bucksLists
-    
+  async getClutchBucks() {
+    const bucksLists = await prisma.payment_bucks.findMany();
+    console.log('🚀 ~ PaymentService ~ getClutchBucks ~ bucksLists:', bucksLists);
+    return bucksLists;
   }
   async updateAmount(paymentId: string, user_id: string) {
-    console.log("🚀 ~ PaymentService ~ updateAmount ~ user_id:", user_id)
-    console.log("🚀 ~ PaymentService ~ updateAmount ~ paymentId:", paymentId)
+    console.log('🚀 ~ PaymentService ~ updateAmount ~ user_id:', user_id);
+    console.log('🚀 ~ PaymentService ~ updateAmount ~ paymentId:', paymentId);
     const find = await prisma.payment_bucks.findFirst({
       where: {
         id: Number(paymentId),
       },
     });
-    console.log("🚀 ~ PaymentService ~ updateAmount ~ find:", find)
-  
+    console.log('🚀 ~ PaymentService ~ updateAmount ~ find:', find);
+
     if (!find) {
-      throw new Error("Payment not found");
+      throw new Error('Payment not found');
     }
-  
+
     await prisma.user.update({
       where: {
         id: Number(user_id),
@@ -163,7 +160,42 @@ class PaymentService {
       },
     });
   }
-  
-  
+  async paymentSuccess(data: any, userId: string) {
+    console.log("🚀 ~ PaymentService ~ paymentSuccess ~ data:", data)
+    console.log("🚀 ~ PaymentService ~ paymentSuccess ~ data:", data.clutch_bucks_id)
+    try {
+      const clutch_bucks = await prisma.payment_bucks.findFirst({
+        where: {
+          id: Number(data.clutchbuck_id),
+        },
+      });
+      console.log('🚀 ~ PaymentService ~ paymentSuccess ~ clutch_bucks:', clutch_bucks);
+      const payment_buck_transaction = await prisma.payment_bucks_transaction.create({
+        data: {
+          user_id: Number(userId),
+          payment_bucks_id: Number(data.clutchbuck_id),
+        },
+      });
+      console.log(
+        '🚀 ~ PaymentService ~ paymentSuccess ~ payment_buck_transaction:',
+        payment_buck_transaction,
+      );
+      const user = await prisma.user.update({
+        where: {
+          id: Number(userId),
+        },
+        data: {
+          clutch_bucks: {
+            increment: Number(clutch_bucks?.amount), // Increase the value instead of replacing it
+          },
+        },
+      });
+      
+      console.log('🚀 ~ PaymentService ~ paymentSuccess ~ user:', user);
+      console.log('🚀 ~ paymentSuccess ~ user:', user);
+    } catch (error) {
+      console.log('🚀 ~ PaymentService ~ paymentSuccess ~ error:', error);
+    }
+  }
 }
 export default new PaymentService();

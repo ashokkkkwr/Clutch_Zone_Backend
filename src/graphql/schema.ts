@@ -1,6 +1,8 @@
 import {gql} from 'apollo-server-express';
 
 export const typeDefs = gql`
+  scalar Date
+
   type User {
     id: ID!
     username: String!
@@ -40,10 +42,10 @@ export const typeDefs = gql`
     tournament_cover: String
     tournament_description: String
     tournament_entry_fee: String
-    tournament_start_date: String
-    tournament_end_date: String
-    tournament_registration_start_date: String
-    tournament_registration_end_date: String
+    tournament_start_date: Date
+    tournament_end_date: Date
+    tournament_registration_start_date: Date
+    tournament_registration_end_date: Date
     tournament_game_mode: String
     tournament_streaming_link: String
     games: Game
@@ -128,6 +130,7 @@ export const typeDefs = gql`
   type Query {
     hello: String
     getGames: [Game]
+    getFavaurities:[Game]
     getTournaments: [TournamentDetails]
     getUpcomingTournaments: [TournamentDetails]
     getOngoingTournaments: [TournamentDetails]

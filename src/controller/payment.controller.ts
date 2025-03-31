@@ -29,7 +29,14 @@ class PaymentController{
         res.status(200).json({Message:'successfully added Clutch bucks',data:service})
     }catch(err:any){
         res.status(400).json({Message:err.message}) 
+    }}
+    async paymentSuccess(req: Request,res: Response){
+        console.log('ya xirp')
+        const userId = req?.user?.id
+        console.log("🚀 ~ PaymentController ~ paymentSuccess ~ userId:", userId)
+      const data=req.body
+      console.log('data',data)
+      const service = await paymentService.paymentSuccess(data,userId as string)
     }
-}
 }
 export default new PaymentController()

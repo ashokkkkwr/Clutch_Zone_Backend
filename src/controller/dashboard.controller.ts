@@ -104,7 +104,7 @@ const weeklyUsers = daysInWeek.map((day) => {
       
           // Group game favorites per game (to see popularity per game)
           const favoritesByGame = await prisma.game_favaurites.groupBy({
-            by: ['game_id'],
+          by: ['game_id'],
             _count: { game_id: true }
           });
       

@@ -157,6 +157,7 @@ enum MatchStatus {
   COMPLETED
 }
 
+
 model Match {
   id           Int        @id @default(autoincrement())
   tournament   tournament @relation(fields: [tournamentId], references: [id])
@@ -176,13 +177,8 @@ model Match {
   team2        teams?     @relation(name: "Team2", fields: [team2Id], references: [id])
   winnerTeam   teams?     @relation(name: "WinnerTeam", fields: [winnerTeamId], references: [id])
 
-  player1Score   Int?    @map("player1_score")
-  player2Score   Int?    @map("player2_score")
-  team1Score     Int?    @map("team1_score")
-  team2Score     Int?    @map("team2_score")
-  screenshot     String?
+  
   scoreSubmitted Boolean @default(false) @map("score_submitted")
-  points         Int?    @map("points1") // Points for player1 or team1
 
   status          MatchStatus       @default(SCHEDULED)
   createdAt       DateTime          @default(now())
@@ -193,6 +189,8 @@ model Match {
   @@unique([tournamentId, round, position])
   @@map("matches")
 }
+
+
 model ScoreSubmission {
   id            Int              @id @default(autoincrement())
   matchId       Int

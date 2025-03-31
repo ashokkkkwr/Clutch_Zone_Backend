@@ -6,8 +6,6 @@ class scoreSubmissionService {
   async createSubmission(data: any, matchId: any, score_submission_image: string, userId: string) {
    console.log("🚀 ~ scoreSubmissionService ~ createSubmission ~ data:", data)
    try{
-
-   
     const match = await prisma.match.findUnique({
       where: {id: Number(matchId)},
     });
@@ -22,6 +20,7 @@ class scoreSubmissionService {
      
       for(let i = 0; i < scoreSubmissionDataExists.length; i++) {
         if (scoreSubmissionDataExists[i].submittedBy == Number(userId)) {
+          console.log('score already exists')
           throw HttpException.badRequest(`Score is already submitted by this user...`);
         }
       }
@@ -51,9 +50,12 @@ class scoreSubmissionService {
 
             matchId: Number(matchId),
             screenshot: score_submission_image,
-            playerScore: data.points,
+            playerScore: Number(data.points),
+            kills: Number(data.kills),
+            placement: Number(data.placement)
           },
         });
+        console.log("🚀 ~ scoreSubmissionService ~ createSubmission ~ submitScore:", submitScore)
 
         return submitScore;
       }
@@ -93,8 +95,6 @@ class scoreSubmissionService {
   }
   async giveDecision(submissionId: any, decision: any,userId:any) {
     try{
-
-    
     const submission = await prisma.scoreSubmission.findUnique({
       where: { id: Number(submissionId) }
     });
@@ -117,6 +117,49 @@ class scoreSubmissionService {
         where: { id: Number(submissionId) },
         data: { status: decision }
       });
+      //Evaludate elimination tournament scores when both submissions are approved
+      
+        if (decision === 'APPROVED') {
+          const tournament = await prisma.tournament.findUnique({
+              where: { id: match.tournamentId }
+          });
+          if (!tournament?.is_points_based) { // Elimination tournament
+            const approvedSubmissions = await prisma.scoreSubmission.findMany({
+                where: {
+                    matchId: submission.matchId,
+                    status: 'APPROVED'
+                }
+            });
+            if(approvedSubmissions.length ===2){
+              const player1Submission = approvedSubmissions.find(s => s.submittedBy === match.player1Id);
+              const player2Submission = approvedSubmissions.find(s => s.submittedBy === match.player2Id);
+
+              if (!player1Submission || !player2Submission) {
+                throw HttpException.badRequest(`Both submissions are required for elimination tournament...`);
+              }
+              
+              const player1Score = player1Submission.playerScore || 0;
+              const player2Score = player2Submission.playerScore || 0;
+              let winnerId:number | null = null;
+              if (player1Score > player2Score) {
+                winnerId = match.player1Id;
+            } else if (player2Score > player1Score) {
+                winnerId = match.player2Id;
+            } else {
+                throw  HttpException.badRequest(`Scores tied. Manual resolution needed.`);
+            }
+            await prisma.match.update({
+              where: { id: match.id },
+              data: {
+                  winnerId: winnerId,
+                  status: 'COMPLETED'
+              }
+          });
+            }
+          }
+      }
+
+
       return updatedSubmission;
     }catch(error:any) {
       console.log("🚀 ~ scoreSubmissionService ~ giveDecision ~ error:", error)

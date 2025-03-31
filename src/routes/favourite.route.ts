@@ -11,4 +11,5 @@ import { authentication } from '../middleware/authentication.middleware'
 const router:IRouter=Router();
 router.use(authentication())
 router.post('/add-favourite',catchAsync(favouriteController.addFavourite));
+router.get('/get-favourite',catchAsync(favouriteController.getUserFavouriteGames));
 export default router
