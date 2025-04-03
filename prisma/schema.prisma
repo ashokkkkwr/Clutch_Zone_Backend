@@ -205,6 +205,8 @@ model ScoreSubmission {
   status        SubmissionStatus @default(PENDING)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
+    teamId        Int?             @map("team_id") // Add this line
+
 }
 enum SubmissionStatus {
   PENDING

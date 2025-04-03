@@ -4,70 +4,77 @@ const prisma = new PrismaClient();
 
 class scoreSubmissionService {
   async createSubmission(data: any, matchId: any, score_submission_image: string, userId: string) {
-   console.log("🚀 ~ scoreSubmissionService ~ createSubmission ~ data:", data)
-   try{
-    const match = await prisma.match.findUnique({
-      where: {id: Number(matchId)},
-    });
-    if (!match) {
-      throw HttpException.badRequest(`match not found...`);
-    }
-    console.log(match.player1Id, match.player2Id, userId);
-    if (match.player1Id == Number(userId) || match.player2Id == Number(userId)) {
-      const scoreSubmissionDataExists = await prisma.scoreSubmission.findMany({
-        where: {matchId: Number(matchId)},
+    try {
+      const match = await prisma.match.findUnique({
+        where: { id: Number(matchId) },
+        include: { team1: true, team2: true }
       });
-     
-      for(let i = 0; i < scoreSubmissionDataExists.length; i++) {
-        if (scoreSubmissionDataExists[i].submittedBy == Number(userId)) {
-          console.log('score already exists')
-          throw HttpException.badRequest(`Score is already submitted by this user...`);
+      if (!match) throw HttpException.badRequest('Match not found');
+  
+      const isTeamMatch = !!match.team1Id && !!match.team2Id;
+      let teamId: number | null = null;
+      let isEligible = false;
+  
+      // Check eligibility based on match type
+      if (isTeamMatch) {
+        // Check if user is part of either team
+        const userTeam = await prisma.teamPlayers.findFirst({
+          where: {
+            user_id: Number(userId),
+            team_id: { in: [match.team1Id!, match.team2Id!] }
+          }
+        });
+        if (userTeam) {
+          isEligible = true;
+          teamId = userTeam.team_id;
         }
+      } else {
+        // Check if user is a player in the match
+        isEligible = [match.player1Id, match.player2Id].includes(Number(userId));
       }
-     
+  
+      if (!isEligible) throw HttpException.badRequest('Not a participant');
+  
+      // Check for existing submissions
+      if (isTeamMatch) {
+        const existing = await prisma.scoreSubmission.findFirst({
+          where: { matchId: Number(matchId), teamId }
+        });
+        if (existing) throw HttpException.badRequest('Team already submitted');
+      } else {
+        const existing = await prisma.scoreSubmission.findFirst({
+          where: { matchId: Number(matchId), submittedBy: Number(userId) }
+        });
+        if (existing) throw HttpException.badRequest('User already submitted');
+      }
+  
+      // Create submission data
+      const submissionData: any = {
+        submittedBy: Number(userId),
+        matchId: Number(matchId),
+        screenshot: score_submission_image,
+        playerScore: Number(data.points),
+        isTeam: isTeamMatch,
+        teamId: isTeamMatch ? teamId : undefined
+      };
+  
       const tournament = await prisma.tournament.findUnique({
-        where: {id: match.tournamentId},
+        where: { id: match.tournamentId }
       });
-      console.log('data', data.points);
-
-      if (!tournament?.is_points_based) {
-        const submitScore = await prisma.scoreSubmission.create({
-          data: {
-            submittedBy: Number(userId),
-            matchId: Number(matchId),
-            screenshot: score_submission_image,
-            playerScore: Number(data.points),
-            
-          },
-        });
-
-        return submitScore;
-      }
+  
       if (tournament?.is_points_based) {
-        const submitScore = await prisma.scoreSubmission.create({
-          data: {
-            submittedBy: Number(userId),
-
-            matchId: Number(matchId),
-            screenshot: score_submission_image,
-            playerScore: Number(data.points),
-            kills: Number(data.kills),
-            placement: Number(data.placement)
-          },
-        });
-        console.log("🚀 ~ scoreSubmissionService ~ createSubmission ~ submitScore:", submitScore)
-
-        return submitScore;
+        submissionData.kills = Number(data.kills);
+        submissionData.placement = Number(data.placement);
       }
-    } else {
-      console.log('yai ho ra??');
-      throw HttpException.badRequest(`You are not a player of this match...`);
+  
+      const submitScore = await prisma.scoreSubmission.create({ data: submissionData });
+      return submitScore;
+  
+    } catch (error) {
+      console.error('Submission error:', error);
+      throw error;
     }
-}catch(error:any) {
-  console.log("🚀 ~ scoreSubmissionService ~ createSubmission ~ error:", error)
   }
-  }
-
 
   async getPendingSubmissions() {
     const submissions = await prisma.scoreSubmission.findMany({
@@ -96,7 +103,8 @@ class scoreSubmissionService {
   async giveDecision(submissionId: any, decision: any,userId:any) {
     try{
     const submission = await prisma.scoreSubmission.findUnique({
-      where: { id: Number(submissionId) }
+      where: { id: Number(submissionId) },
+      include:{match:{include:{tournament:true}}}
     });
     if (!submission) {
       throw HttpException.badRequest(`Submission not found...`);
@@ -119,54 +127,74 @@ class scoreSubmissionService {
       });
       //Evaludate elimination tournament scores when both submissions are approved
       
-        if (decision === 'APPROVED') {
-          const tournament = await prisma.tournament.findUnique({
-              where: { id: match.tournamentId }
-          });
-          if (!tournament?.is_points_based) { // Elimination tournament
-            const approvedSubmissions = await prisma.scoreSubmission.findMany({
-                where: {
-                    matchId: submission.matchId,
-                    status: 'APPROVED'
-                }
-            });
-            if(approvedSubmissions.length ===2){
-              const player1Submission = approvedSubmissions.find(s => s.submittedBy === match.player1Id);
-              const player2Submission = approvedSubmissions.find(s => s.submittedBy === match.player2Id);
-
-              if (!player1Submission || !player2Submission) {
-                throw HttpException.badRequest(`Both submissions are required for elimination tournament...`);
+      if (decision === 'APPROVED') {
+        // Handle points-based tournaments
+        if (submission.match.tournament.is_points_based) {
+          let participant;
+          if (submission.isTeam) {
+            participant = await prisma.participant.findFirst({
+              where: {
+                tournamentId: submission.match.tournamentId,
+                teamId: submission.teamId
               }
-              
-              const player1Score = player1Submission.playerScore || 0;
-              const player2Score = player2Submission.playerScore || 0;
-              let winnerId:number | null = null;
-              if (player1Score > player2Score) {
-                winnerId = match.player1Id;
-            } else if (player2Score > player1Score) {
-                winnerId = match.player2Id;
-            } else {
-                throw  HttpException.badRequest(`Scores tied. Manual resolution needed.`);
-            }
+            });
+          } else {
+            participant = await prisma.participant.findFirst({
+              where: {
+                tournamentId: submission.match.tournamentId,
+                userId: submission.submittedBy
+              }
+            });
+          }
+          if (participant) {
+            await prisma.participant.update({
+              where: { id: participant.id },
+              data: { points: { increment: submission.playerScore || 0 } }
+            });
+          }
+        }
+  
+        // Handle elimination tournaments
+        const approvedSubmissions = await prisma.scoreSubmission.findMany({
+          where: { matchId: submission.matchId, status: 'APPROVED' }
+        });
+  
+        if (approvedSubmissions.length === 2) {
+          const match = await prisma.match.findUnique({
+            where: { id: submission.matchId },
+            include: { team1: true, team2: true }
+          });
+  
+          if (match?.team1Id && match?.team2Id) {
+            // Team match resolution
+            const [team1Sub, team2Sub] = approvedSubmissions;
+            const winnerId = (team1Sub.playerScore! > team2Sub.playerScore!) 
+              ? match.team1Id 
+              : match.team2Id;
+  
             await prisma.match.update({
               where: { id: match.id },
-              data: {
-                  winnerId: winnerId,
-                  status: 'COMPLETED'
-              }
-          });
-            }
+              data: { winnerTeamId: winnerId, status: 'COMPLETED' }
+            });
+          } else {
+            // Individual match resolution
+            const [p1Sub, p2Sub] = approvedSubmissions;
+            const winnerId = (p1Sub.playerScore! > p2Sub.playerScore!) 
+              ? match?.player1Id 
+              : match?.player2Id;
+  
+            await prisma.match.update({
+              where: { id: match?.id },
+              data: { winnerId, status: 'COMPLETED' }
+            });
           }
+        }
       }
-
-
       return updatedSubmission;
-    }catch(error:any) {
-      console.log("🚀 ~ scoreSubmissionService ~ giveDecision ~ error:", error)
-      
+    } catch (error) {
+      console.error('Decision error:', error);
+      throw error;
     }
-    
-  }
-}
+  }}
 
 export default new scoreSubmissionService();
