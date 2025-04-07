@@ -35,6 +35,10 @@ export const resolvers = {
     getTeams: () => {
       return teamService.getTeam();
   },
+  getOwnTeams:(_: any, args: any, context: any)=>{
+    const userId = authenticateUser(context);
+    return teamService.getOwnTeams(userId);
+  },
     getGears:()=>{
 return gearService.getGear();
     },

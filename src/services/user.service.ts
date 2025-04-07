@@ -169,5 +169,80 @@ async updateBio(id: string, bio: string){
   })
   return user
 }
+async changePassword(userId:string,data:any){
+console.log("🚀 ~ UserService ~ changePassword ~ userId:", userId)
+console.log("🚀 ~ UserService ~ changePassword ~ data:", data)
+const user=await prisma.user.findFirst({
+  where:{
+    id:Number(userId)
+  }
+})
+if (!user) {
+  throw HttpException.notFound(`User not found`);
+}
+const isPasswordMatch = await  BcryptService.compare(data.password, user.password);
+console.log("🚀 ~ UserService ~ changePassword ~ isPasswordMatch:", isPasswordMatch)
+if (!isPasswordMatch) {
+  throw HttpException.badRequest(`Please enter the correct password`);
+}
+const hashedPassword = await BcryptService.hash(data.updatedPassword);
+
+const save=await prisma.user.update({
+  where:{id:Number(userId)},
+  data:{
+    password:hashedPassword
+  }
+})
+return save
+
+
+}
+async verifyEmail(email: string) {
+  const user = await prisma.user.findUnique({where: {email}});
+  if (!user) throw HttpException.notFound(Message.notFound);
+  return user;
+}
+async setToken(id: number, token: string): Promise<string> {
+  // await this.userRepo.update(id, {token});
+  await prisma.user.update({
+    where: {id:Number(id)},
+    data: {token},
+  })
+  return Message.updated;
+}
+async setOptVerified(email: string, verified: boolean) {
+  const user = await prisma.user.findFirst({where: {email}});
+  if (!user) throw HttpException.notFound(Message.notFound);
+  await prisma.user.update({
+    where: {id:user.id},
+    data: {otpVerified: verified},
+  })
+  return Message.updated;
+}
+async resetPassword(data:any){
+  console.log("🚀 ~ UserService ~ resetPassword ~ data:", data)
+  try{  
+    console.log(data.email)
+    const user= await prisma.user.findUnique({
+      where: {email:data.email,otpVerified: true}
+    })
+    console.log("🚀 ~ AuthService ~ resetPassword ~ user:", user)
+    if(!user)throw HttpException.notFound(Message.notFound)
+      if(!user.token) throw HttpException.notFound(Message.notFound)
+    const [expires]=user.token.split('.')
+    if(Date.now()>+expires) throw HttpException.badRequest(Message.otpExpired)
+      const hashedPassword = await BcryptService.hash(data.newPassword);
+  
+  const update = await prisma.user.update({
+    where: {id:user.id},
+    data: {password: hashedPassword, otpVerified: false, token: ''},
+  });
+    return update
+  }catch(error:any){
+    console.log("🚀 ~ UserService ~ resetPassword ~ error:", error)
+    throw HttpException.badRequest(error.message)
+  }
+    // console.log("🚀 ~ UserService ~ resetPassword ~ user:", user)
+}
 }
 export default new UserService();

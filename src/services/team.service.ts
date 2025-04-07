@@ -77,6 +77,54 @@ class TeamService {
 
     return getAllTeams;
   }
+  async getOwnTeams(userId: string) {
+    const parsedUserId = parseInt(userId);  
+    const userTeam= await prisma.teamPlayers.findFirst({
+      where: {  
+        user_id: parsedUserId,
+      },
+      include: {
+        team: {
+          include: {
+            teamPlayers: {
+              include: {
+                user: {
+                  select: {
+                    id:true,
+                    role:true,
+                    username: true,
+                    email: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+    });
+    if (!userTeam) {
+      throw HttpException.notFound('User not found or not part of any team.');
+    }
+    console.log('🚀 ~ TeamService ~ getOwnTeams ~ userTeam:', userTeam);
+    console.log('🚀 ~ TeamService ~ getOwnTeams ~ parsedUserId:', parsedUserId)
+    const getOwnTeamPlayers = await prisma.teamPlayers.findMany({
+      where: {  
+        team_id: userTeam.team_id,
+      },
+      include: {  
+        user: {
+          select: {
+            id:true,
+            role:true,
+            username: true,
+            email: true
+          }
+        }
+      },
+    }); 
+    console.log("🚀 ~ TeamService ~ getOwnTeams ~ getOwnTeamPlayers:", getOwnTeamPlayers)
+    return getOwnTeamPlayers;
+  }
 
   /**
    * Get own team details code
@@ -567,6 +615,57 @@ class TeamService {
     console.log('🚀 ~ TeamService ~ getPendingRequests ~ requests:', requests);
 
     return requests;
+  }
+  async addTeamMedia( mediaUrl: string, type: string, userId: number) {
+
+    const teamId= await prisma.teamPlayers.findFirst({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        team_id: true,
+      },
+    });
+    try {
+      const newMedia = await prisma.team_media.create({
+        data: {
+          team_id: teamId?.team_id!,
+          media_url: mediaUrl,
+          type,
+          user_id: userId,
+        },
+      });
+      return newMedia;
+    } catch (error) {
+      console.error('Error in addTeamMedia:', error);
+      throw  HttpException.internalServerError('Failed to add media');
+    }
+  }
+  async getTeamMedia(userId: number) {
+    const teamId = await prisma.teamPlayers.findFirst({
+      where: {
+        user_id: userId,
+      },
+      select: {
+        team_id: true,
+      },
+    });
+    try {
+      //display according to the createdAt date
+      const media = await prisma.team_media.findMany({
+        where: {
+          team_id: teamId?.team_id!,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+      
+      return media;
+    } catch (error) {
+      console.error('Error in getTeamMedia:', error);
+      throw HttpException.internalServerError('Failed to fetch media');
+    }
   }
 }
 export default new TeamService();

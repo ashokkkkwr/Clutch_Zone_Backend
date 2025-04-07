@@ -136,7 +136,8 @@ export const typeDefs = gql`
     getOngoingTournaments: [TournamentDetails]
     getMyTournament: [TournamentDetails]
     getPastTournaments: [TournamentDetails]
-    getTeams: [Team] # Changed from 'teams' to 'Team'
+    getTeams: [Team] 
+    getOwnTeams: [TeamPlayer]
     getGears: [Gear]
     getOwnTeamDetails: OwnTeamDetails
     getTournament(id: ID!): TournamentDetails

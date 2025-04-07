@@ -33,6 +33,7 @@ const gearImagesPath="uploads/gearImages";
 const bucksPath="uploads/buckImages"
 const scoreSubmissionPath="uploads/scoreSubmissionImages";
 const teamImagePath="uploads/teamImages";
+const teamMediaPath="uploads/teamMedia";
 // Ensure folders exist
 ensureDirectoryExistence(gameCoverImagesPath);
 ensureDirectoryExistence(gameIconImagesPath);
@@ -42,6 +43,7 @@ ensureDirectoryExistence(gearImagesPath);
 ensureDirectoryExistence(teamImagePath);
 ensureDirectoryExistence(bucksPath)
 ensureDirectoryExistence(scoreSubmissionPath)
+ensureDirectoryExistence(teamMediaPath);
 
 const gameStorage= multer.diskStorage({
   destination: (req, file, cb) => {
@@ -108,8 +110,16 @@ const teamStorage=multer.diskStorage({
     if(file.fieldname==='image'){
       cb(null,teamImagePath );
     }
-   
-   
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+})
+const teamMediaStorage=multer.diskStorage({
+  destination: (req, file, cb) => {
+    if(file.fieldname==='image'){
+      cb(null,teamMediaPath );
+    }
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname));
@@ -118,10 +128,10 @@ const teamStorage=multer.diskStorage({
 
 
 const fileFilter = (req: any, file: any, cb: any) => {
-  if (file.mimetype.startsWith('image/')) {
+  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type, only images are allowed!'), false);
+    cb(new Error('Invalid file type, only images and videos are allowed!'), false);
   }
 };
 
@@ -152,3 +162,7 @@ export const buckImagesUpload = multer({
   storage:buckStorage,
   fileFilter:fileFilter
 })
+export const teamMediaUpload = multer({
+  storage:teamMediaStorage,
+  fileFilter:fileFilter
+});

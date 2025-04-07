@@ -8,6 +8,7 @@ import profile from './profile.route'
 import scoreSubmission from './scoreSubmisson.route'
 import dashboard from './dashboard.route'
 import favourite from './favourite.route'
+import user from './user.routes'
 export interface Route {
   path: string
   route: Router
@@ -17,6 +18,10 @@ const routes: Route[] = [
   {
     path: '/game',
     route: game,
+  },
+  {
+path: '/user',
+route: user
   },
   {
     path: '/tournament',

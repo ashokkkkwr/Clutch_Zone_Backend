@@ -60,6 +60,21 @@ model teams {
   Match              Match[]       @relation(name: "WinnerTeam")
 
   TeamJoinRequest TeamJoinRequest[]
+
+  team_media team_media[]
+}
+model team_media{
+  id        Int    @id @default(autoincrement())
+  team_id   Int
+  media_url String @map("media_url")
+  type      String @map("type")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  team teams @relation(fields: [team_id], references: [id])
+  user_id Int
+  user user @relation(fields: [user_id], references: [id])
+ 
 }
 
 model TeamJoinRequest {
@@ -239,7 +254,8 @@ model user {
   gear_purchases      gear_purchase[]
   top_up_transactions top_up_transaction[]
   purchases           gear_transaction[]
-
+token          String?        
+otpVerified Boolean @default(false)
   Bracket                   Bracket[]
   participants              Participant[]
   matchesAsPlayer1          Match[]                     @relation(name: "Player1")
@@ -251,6 +267,8 @@ model user {
   createdAt    DateTime   @default(now())
 
   game_favaurites game_favaurites[]
+
+  team_media team_media[]
 }
 
 model Participant {
