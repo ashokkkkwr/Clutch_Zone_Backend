@@ -9,6 +9,7 @@ import scoreSubmission from './scoreSubmisson.route'
 import dashboard from './dashboard.route'
 import favourite from './favourite.route'
 import user from './user.routes'
+import leaderboard from './leaderboard.route'
 export interface Route {
   path: string
   route: Router
@@ -54,6 +55,9 @@ route: user
   {
     path:'/favourite',
     route:favourite
+  },{
+    path:'/leaderboard',
+    route:leaderboard
   }
 ]
 routes.forEach((route) => {

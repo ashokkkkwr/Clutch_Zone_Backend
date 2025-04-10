@@ -303,7 +303,6 @@ class TournamentService {
       orderBy: {points: 'desc'},
       include: {user: true, team: true},
     });
-
     return leaderboard.map((p) => ({
       id: isTeamTournament ? p.teamId : p.userId,
       name: isTeamTournament ? p.team?.team_name : p.user?.username,

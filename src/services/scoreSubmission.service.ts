@@ -1,7 +1,7 @@
 import HttpException from '../utils/HttpException.utils';
 import {PrismaClient} from '@prisma/client';
 const prisma = new PrismaClient();
-
+import { MatchStatus } from '@prisma/client';
 class scoreSubmissionService {
   async createSubmission(data: any, matchId: any, score_submission_image: string, userId: string) {
     try {
@@ -100,101 +100,192 @@ class scoreSubmissionService {
     })
     return submissions;
   }
-  async giveDecision(submissionId: any, decision: any,userId:any) {
-    try{
-    const submission = await prisma.scoreSubmission.findUnique({
-      where: { id: Number(submissionId) },
-      include:{match:{include:{tournament:true}}}
-    });
-    if (!submission) {
-      throw HttpException.badRequest(`Submission not found...`);
-    }
-    const match = await prisma.match.findUnique({
-      where: { id: submission.matchId }
-    });
-    if (!match) {
-      throw HttpException.badRequest(`Match not found...`);
-    }
-    const isAdmin=await prisma.user.findUnique({
-      where:{id:Number(userId)}});
-      console.log("🚀 ~ scoreSubmissionService ~ giveDecision ~ isAdmin:", isAdmin)
-      if(isAdmin?.role!="admin"){
-        throw HttpException.badRequest(`You are not authorized to perform this action...`);
+  async giveDecision(submissionId: any, decision: any, userId: any) {
+    try {
+      // Get the submission and the associated match and tournament.
+      const submission = await prisma.scoreSubmission.findUnique({
+        where: { id: Number(submissionId) },
+        include: { match: { include: { tournament: true } } },
+      });
+      if (!submission) {
+        throw HttpException.badRequest(`Submission not found...`);
       }
+      const match = await prisma.match.findUnique({
+        where: { id: submission.matchId },
+      });
+      if (!match) {
+        throw HttpException.badRequest(`Match not found...`);
+      }
+  
+      // Check if the user is an admin.
+      const isAdmin = await prisma.user.findUnique({
+        where: { id: Number(userId) },
+      });
+      console.log("🚀 ~ scoreSubmissionService ~ giveDecision ~ isAdmin:", isAdmin);
+      if (isAdmin?.role !== "admin") {
+        throw HttpException.badRequest(
+          `You are not authorized to perform this action...`
+        );
+      }
+  
+      // Update the submission status.
       const updatedSubmission = await prisma.scoreSubmission.update({
         where: { id: Number(submissionId) },
-        data: { status: decision }
+        data: { status: decision },
       });
-      //Evaludate elimination tournament scores when both submissions are approved
-      
-      if (decision === 'APPROVED') {
-        // Handle points-based tournaments
+  
+      // Process approved submissions.
+      if (decision === "APPROVED") {
+        // Handle points-based tournaments.
         if (submission.match.tournament.is_points_based) {
           let participant;
           if (submission.isTeam) {
             participant = await prisma.participant.findFirst({
               where: {
                 tournamentId: submission.match.tournamentId,
-                teamId: submission.teamId
-              }
+                teamId: submission.teamId,
+              },
             });
           } else {
             participant = await prisma.participant.findFirst({
               where: {
                 tournamentId: submission.match.tournamentId,
-                userId: submission.submittedBy
-              }
+                userId: submission.submittedBy,
+              },
             });
           }
           if (participant) {
             await prisma.participant.update({
               where: { id: participant.id },
-              data: { points: { increment: submission.playerScore || 0 } }
+              data: { points: { increment: submission.playerScore || 0 } },
             });
           }
         }
   
-        // Handle elimination tournaments
+        // Handle elimination tournaments.
         const approvedSubmissions = await prisma.scoreSubmission.findMany({
-          where: { matchId: submission.matchId, status: 'APPROVED' }
+          where: { matchId: submission.matchId, status: "APPROVED" },
         });
   
         if (approvedSubmissions.length === 2) {
-          const match = await prisma.match.findUnique({
+          // Get match details including participants.
+          const resolvedMatch = await prisma.match.findUnique({
             where: { id: submission.matchId },
-            include: { team1: true, team2: true }
+            include: { team1: true, team2: true },
           });
   
-          if (match?.team1Id && match?.team2Id) {
-            // Team match resolution
+          // Determine if this is a team or individual match.
+          const isTeamMatch = resolvedMatch?.team1Id && resolvedMatch?.team2Id ? true : false;
+          let winnerId;
+          if (isTeamMatch) {
             const [team1Sub, team2Sub] = approvedSubmissions;
-            const winnerId = (team1Sub.playerScore! > team2Sub.playerScore!) 
-              ? match.team1Id 
-              : match.team2Id;
-  
+            winnerId = team1Sub.playerScore! > team2Sub.playerScore!
+              ? resolvedMatch?.team1Id
+              : resolvedMatch?.team2Id;
             await prisma.match.update({
-              where: { id: match.id },
-              data: { winnerTeamId: winnerId, status: 'COMPLETED' }
+              where: { id: resolvedMatch!.id },
+              data: { winnerTeamId: winnerId, status: "COMPLETED" },
             });
           } else {
-            // Individual match resolution
             const [p1Sub, p2Sub] = approvedSubmissions;
-            const winnerId = (p1Sub.playerScore! > p2Sub.playerScore!) 
-              ? match?.player1Id 
-              : match?.player2Id;
-  
+            winnerId = p1Sub.playerScore! > p2Sub.playerScore!
+              ? resolvedMatch?.player1Id
+              : resolvedMatch?.player2Id;
             await prisma.match.update({
-              where: { id: match?.id },
-              data: { winnerId, status: 'COMPLETED' }
+              where: { id: resolvedMatch!.id },
+              data: { winnerId, status: "COMPLETED" },
+            });
+          }
+        }
+  
+        // After marking the match as COMPLETED, check if the entire round is finished.
+        const currentRound = match.round;
+        const tournamentId = match.tournamentId;
+  
+        // Find any matches in the current round that have not been completed.
+        const incompleteMatches = await prisma.match.findMany({
+          where: {
+            tournamentId,
+            round: currentRound,
+            status: { not: "COMPLETED" },
+          },
+        });
+  
+        if (incompleteMatches.length === 0) {
+          // Retrieve all matches for this round.
+          const currentRoundMatches = await prisma.match.findMany({
+            where: {
+              tournamentId,
+              round: currentRound,
+            },
+            orderBy: { position: "asc" },
+          });
+  
+          // Determine if the match is team-based.
+          const isTeamMatch = currentRoundMatches[0].team1Id !== null;
+  
+          // Extract winners from all matches in the current round.
+          const winners = currentRoundMatches
+            .map((m) => (isTeamMatch ? m.winnerTeamId : m.winnerId))
+            .filter((w): w is number => w !== null);
+  
+          // If all matches are completed, create or update next round matches.
+          const nextRoundNumber = currentRound + 1;
+          const nextRoundMatches = await prisma.match.findMany({
+            where: {
+              tournamentId,
+              round: nextRoundNumber,
+            },
+            orderBy: { position: "asc" },
+          });
+  
+          if (nextRoundMatches.length > 0) {
+            // Update existing next round matches with the winners from the current round.
+            for (let i = 0; i < nextRoundMatches.length; i++) {
+              const updateData = isTeamMatch
+                ? {
+                    team1Id: winners[i * 2] || null,
+                    team2Id: winners[i * 2 + 1] || null,
+                  }
+                : {
+                    player1Id: winners[i * 2] || null,
+                    player2Id: winners[i * 2 + 1] || null,
+                  };
+  
+              await prisma.match.update({
+                where: { id: nextRoundMatches[i].id },
+                data: updateData,
+              });
+            }
+          } else if (winners.length === 2) {
+            // No next round matches exist: create a match for the final round.
+            await prisma.match.create({
+              data: {
+                tournamentId,
+                round: nextRoundNumber,
+                position: 0,
+                status: "SCHEDULED",
+                ...(isTeamMatch
+                  ? {
+                      team1Id: winners[0],
+                      team2Id: winners[1],
+                    }
+                  : {
+                      player1Id: winners[0],
+                      player2Id: winners[1],
+                    }),
+              },
             });
           }
         }
       }
       return updatedSubmission;
     } catch (error) {
-      console.error('Decision error:', error);
+      console.error("Decision error:", error);
       throw error;
     }
-  }}
+  }
+}
+  
 
 export default new scoreSubmissionService();

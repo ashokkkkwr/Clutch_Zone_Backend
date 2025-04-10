@@ -24,6 +24,7 @@ model in_game_id {
   game_id   Int
   user      user   @relation(fields: [user_id], references: [id])
   game      games  @relation(fields: [game_id], references: [id])
+  
 }
 
 model notification {
@@ -134,6 +135,7 @@ model tournament {
   games_id                           Int
   total_player                       Int
   games                              games     @relation(fields: [games_id], references: [id])
+  status          TournamentStatus @default(UPCOMING)
 
   prize_pools        prize_pool[]
   tournament_results tournament_result[]
@@ -265,9 +267,7 @@ otpVerified Boolean @default(false)
   TeamJoinRequest           TeamJoinRequest[]
   payment_bucks_transaction payment_bucks_transaction[]
   createdAt    DateTime   @default(now())
-
   game_favaurites game_favaurites[]
-
   team_media team_media[]
 }
 
