@@ -86,7 +86,6 @@ export const getProfile = async (req: Request, res: Response) => {
         matchHistory
       }
     };
-console.log('profile data',profileData)
     res.json(profileData);
   } catch (error) {
     console.error('Error fetching profile:', error);

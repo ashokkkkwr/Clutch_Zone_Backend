@@ -3,9 +3,7 @@ import {PrismaClient} from '@prisma/client';
 const prisma = new PrismaClient();
 
 class TeamService {
-  /**
-   * Create team code
-   */
+ 
   async createTeam(
     team_name: string,
     max_players: string,
@@ -19,8 +17,10 @@ class TeamService {
           user_id: Number(user_id),
         },
       });
+      console.log("🚀 ~ TeamService ~ ifUserAlreadyOnTeam:", ifUserAlreadyOnTeam)
       if (ifUserAlreadyOnTeam) {
-        throw HttpException.badRequest(
+       console.log("🚀 ~ TeamService ~ ifUserAlreadyOnTeam:", ifUserAlreadyOnTeam)
+       throw   HttpException.badRequest(
           `You are already on a team please leave a team to create a new one.`,
         );
       }
@@ -30,7 +30,6 @@ class TeamService {
           max_players: parseInt(max_players),
           description,
           logo: team_icon,
-          // team_leader_id: parseInt(user_id),
         },
       });
       const assignLeader = await prisma.teamPlayers.create({
@@ -40,16 +39,19 @@ class TeamService {
           role: 'TEAM_LEADER',
         },
       });
-      console.log('🚀 ~ TeamService ~ assignLeader:', assignLeader);
       return saved;
     } catch (error) {
-      console.log('🚀 ~ TeamService ~ createTeam ~ error:', error);
+ if (error instanceof HttpException) {
+          throw new Error(error.message); // GraphQL expects a normal Error with a message
+        }
+        
+        // If it's something else, throw a generic error
+        throw new Error('An unexpected error occurred.');
     }
   }
-  /**
-   * Get all team code
-   */
+ 
   async getTeam() {
+
     const getAllTeams = await prisma.teams.findMany({
       include: {
         teamPlayers: {
@@ -64,17 +66,11 @@ class TeamService {
             }
           }
         }
-      }
+      },orderBy:{
+          CreatedAt  : 'asc',
+          }
+
     });
-
-
-    console.log(
-      '🚀 ~ TeamService ~ getTeam ~ Usernames:',
-      getAllTeams.flatMap((team) =>
-        team.teamPlayers.map((player) => player)
-      )
-    );
-
     return getAllTeams;
   }
   async getOwnTeams(userId: string) {
@@ -93,7 +89,8 @@ class TeamService {
                     id:true,
                     role:true,
                     username: true,
-                    email: true
+                    email: true,
+                    avatar: true,
                   }
                 }
               }
@@ -105,8 +102,6 @@ class TeamService {
     if (!userTeam) {
       throw HttpException.notFound('User not found or not part of any team.');
     }
-    console.log('🚀 ~ TeamService ~ getOwnTeams ~ userTeam:', userTeam);
-    console.log('🚀 ~ TeamService ~ getOwnTeams ~ parsedUserId:', parsedUserId)
     const getOwnTeamPlayers = await prisma.teamPlayers.findMany({
       where: {  
         team_id: userTeam.team_id,
@@ -117,24 +112,17 @@ class TeamService {
             id:true,
             role:true,
             username: true,
-            email: true
+            email: true,
+            avatar: true,
           }
         }
       },
     }); 
-    console.log("🚀 ~ TeamService ~ getOwnTeams ~ getOwnTeamPlayers:", getOwnTeamPlayers)
     return getOwnTeamPlayers;
   }
-
-  /**
-   * Get own team details code
-   */
-
   async getOwnTeamDetails(id: string) {
     try {
       const userId = parseInt(id);
-      console.log('🚀 ~ TeamService ~ getOwnTeamDetails ~ userId:', userId);
-
       const teamDetails = await prisma.teams.findFirst({
         where: {
           OR: [
@@ -163,7 +151,6 @@ class TeamService {
           },
         },
       });
-      console.log('hahaa-asd-s-dsa-d-sa', teamDetails);
 
       if (!teamDetails) {
         return {message: 'No team found for this user'};
@@ -171,34 +158,43 @@ class TeamService {
 
       return teamDetails;
     } catch (error) {
-      console.error('Error fetching team details:', error);
       throw new Error('An error occurred while fetching the team details.');
     }
   }
-  /**
-   * COde to delete team
-   */
-  async deleteTeam(teamId: string, userId: string) {
-    const teamLeader = await prisma.teamPlayers.findFirst({
-      where: {
-        team_id: parseInt(teamId),
-        user_id: parseInt(userId),
-        role: 'TEAM_LEADER',
-      },
-    });
-    if (!teamLeader) {
-      throw HttpException.forbidden('only the team leader can delete the team.');
-    }
-    const deletedTeam = await prisma.teams.delete({
-      where: {
-        id: parseInt(teamId),
-      },
-    });
-    return deletedTeam;
+async deleteTeam(teamId: string, userId: string) {
+  const teamIdInt = parseInt(teamId);
+  const userIdInt = parseInt(userId);
+
+  // Check if the user is a team leader
+  const teamLeader = await prisma.teamPlayers.findFirst({
+    where: {
+      team_id: teamIdInt,
+      user_id: userIdInt,
+      role: 'TEAM_LEADER',
+    },
+  });
+
+
+  const isAdmin = await prisma.user.findUnique({
+    where: {
+      id: userIdInt,
+    },
+    select: {
+      role: true,
+    },
+  });
+
+  if (!teamLeader && isAdmin?.role !== 'ADMIN') {
+    throw HttpException.forbidden('Only the team leader or an admin can delete the team.');
   }
-  /**
-   * Code to add player
-   */
+
+  const deletedTeam = await prisma.teams.delete({
+    where: {
+      id: teamIdInt,
+    },
+  });
+  return deletedTeam;
+}
   async addPlayer(teamId: string, userId: string, newPlayerId: string) {
     const teamLeader = await prisma.teamPlayers.findFirst({
       where: {
@@ -237,9 +233,6 @@ class TeamService {
     });
     return newPlayer;
   }
-  /**
-   * Code to remove player
-   */
   async removePlayer(teamId: string, userId: string, playerIdToRemove: string) {
     const currentUserRole = await prisma.teamPlayers.findFirst({
       where: {
@@ -274,10 +267,9 @@ class TeamService {
     });
     return removedPlayer;
   }
-  /**
-   * Code to change the team leader
-   */
   async changeTeamLeader(teamId: string, userId: string, newLeaderId: string) {
+    console.log("🚀 ~ TeamService ~ changeTeamLeader ~ userId:", userId)
+    console.log("🚀 ~ TeamService ~ changeTeamLeader ~ teamId:", teamId)
     const currentLeader = await prisma.teamPlayers.findFirst({
       where: {
         team_id: parseInt(teamId),
@@ -285,6 +277,7 @@ class TeamService {
         role: 'TEAM_LEADER',
       },
     });
+    console.log("🚀 ~ TeamService ~ changeTeamLeader ~ currentLeader:", currentLeader)
     if (!currentLeader) {
       throw HttpException.forbidden('Only the current team leader can transfer leadership.');
     }
@@ -310,9 +303,6 @@ class TeamService {
     });
     return updatedNewLeader;
   }
-  /**
-   * Code to get team by id
-   */
   async getTeamById(teamId: string) {
     const team = await prisma.teams.findUnique({
       where: {id: parseInt(teamId)},
@@ -349,21 +339,38 @@ class TeamService {
     }
     return team.teamPlayers.length >= team.max_players;
   }
-  /**
-   * Send a request to join a team
-   */
+  
   async sendJoinRequest(userId: string, teamId: string) {
+    console.log('ya?')
     try{
+
       const parsedUserId = parseInt(userId);
       console.log("🚀 ~ TeamService ~ sendJoinRequest ~ parsedUserId:", parsedUserId)
       const parsedTeamId = parseInt(teamId);
       console.log("🚀 ~ TeamService ~ sendJoinRequest ~ parsedTeamId:", parsedTeamId)
-  
+      const teams = await prisma.teams.findUnique({
+        where: { id: parsedTeamId },
+        include: { 
+          teamPlayers: {
+            include: {
+              user: true // Include the related User data
+            }
+          }
+        },
+      });
+      console.log("🚀 ~ TeamService ~ sendJoinRequest ~ teams:", teams)
+      if (!teams) {
+        throw HttpException.notFound('Team not found.');
+      }
+    
       // Check if user is already in a team
       const existingPlayer = await prisma.teamPlayers.findFirst({
         where: {user_id: parsedUserId},
       });
+      console.log("🚀 ~ TeamService ~ sendJoinRequest ~ existingPlayer:", existingPlayer)
+      console.log("🚀 ~ TeamService ~ sendJoinRequest ~ existingPlayer:", existingPlayer)
       if (existingPlayer) {
+        console.log("🚀 ~ TeamService ~ sendJoinRequest ~ existingPlayer:", existingPlayer)
         throw HttpException.notFound('You are already in a team.');
       }
   
@@ -376,8 +383,10 @@ class TeamService {
         },
       });
       console.log("🚀 ~ TeamService ~ sendJoinRequest ~ existingRequest:", existingRequest)
+      console.log("🚀 ~ TeamService ~ sendJoinRequest ~ existingRequest:", existingRequest)
       if (existingRequest) {
-        throw new Error('A pending request already exists.');
+        console.log("🚀 ~ TeamService ~ sendJoinRequest ~ existingRequest:", existingRequest)
+        throw HttpException.conflict('Request already sent, wait for the decision...');
       }
   
       // Get user and team details for notification
@@ -395,7 +404,7 @@ class TeamService {
       if (!user || !team) {
         throw HttpException.notFound('User or team not found.');
       }
-  
+  console.log('ya saman')
       // Create the request
       const request = await prisma.teamJoinRequest.create({
         data: {
@@ -404,6 +413,7 @@ class TeamService {
           status: 'PENDING',
         },
       });
+      console.log("🚀 ~ TeamService ~ sendJoinRequest ~ request:", request)
   
       // Get the team leader's user ID
       const teamLeader = await prisma.teamPlayers.findFirst({
@@ -415,27 +425,26 @@ class TeamService {
       if (!teamLeader) {
         throw HttpException.notFound('Team leader not found.');
       }
-  
-      // Create notification for the leader
-      await prisma.notification.create({
-        data: {
-          message: `User ${user.username} has requested to join your team ${team.team_name}.`,
-          sender: parsedUserId,
-          receiver: teamLeader.user_id,
-          links: `/team/${parsedTeamId}/requests`,
-        },
-      });
-  
-      return team;
-    }catch(error:any){
-     throw new Error("error",error)
-      
+
+  console.log('pugo')
+  console.log(teams)
+      return teams;
     }
+      catch (error: any) {
+        this.changeTeamLeader
+        console.log('ya po aayo:')
+        console.error(error); // Always log it for server debugging
+        
+        // If it's already an HttpException, throw it again
+        if (error instanceof HttpException) {
+          throw new Error(error.message); // GraphQL expects a normal Error with a message
+        }
+        
+        // If it's something else, throw a generic error
+        throw new Error('An unexpected error occurred.');
+      }
     
-  }
-  /**
-   * Accept a join request (Team Leader Only)
-   */
+  } 
   async acceptRequest(leaderUserId: string, requestId: string) {
     return await prisma.$transaction(async (prisma) => {
       const parsedLeaderId = parseInt(leaderUserId);
@@ -486,22 +495,21 @@ class TeamService {
         data: {status: 'ACCEPTED'},
       });
 
-      // Create notification for the player
-      await prisma.notification.create({
-        data: {
-          message: `Your request to join team ${team.team_name} has been accepted.`,
-          sender: parsedLeaderId,
-          receiver: request.user_id,
-          links: `/team/${request.team_id}`,
-        },
-      });
+      // // Create notification for the player
+      // await prisma.notification.create({
+      //   data: {
+      //     message: `Your request to join team ${team.team_name} has been accepted.`,
+      //     sender: parsedLeaderId,
+      //     receiver: request.user_id,
+      //     links: `/team/${request.team_id}`,
+      //   },
+      // });
 
-      return {message: 'Request accepted. Player added to the team.'};
+      return 'Request accepted. Player added to the team.';
+
     });
   }
-  /**
-   * Reject a join request (Team Leader Only)
-   */
+ 
   async rejectRequest(leaderUserId: string, requestId: string) {
     return await prisma.$transaction(async (prisma) => {
       const parsedLeaderId = parseInt(leaderUserId);
@@ -533,24 +541,21 @@ class TeamService {
         data: {status: 'REJECTED'},
       });
 
-      // Create notification for the player
-      await prisma.notification.create({
-        data: {
-          message: `Your request to join team ${request.team.team_name} has been rejected.`,
-          sender: parsedLeaderId,
-          receiver: request.user_id,
-          links: `/team/${request.team_id}`,
-        },
-      });
+      // // Create notification for the player
+      // await prisma.notification.create({
+      //   data: {
+      //     message: `Your request to join team ${request.team.team_name} has been rejected.`,
+      //     sender: parsedLeaderId,
+      //     receiver: request.user_id,
+      //     links: `/team/${request.team_id}`,
+      //   },
+      // });
 
       return {message: 'Request rejected.'};
     });
   }
-  /**
-   * Get pending join requests for a team (Team Leader Only)
-   */
+ 
   async getPendingRequests(userId: string) {
-    console.log('xit');
     const teamDetails = await prisma.teams.findFirst({
       where: {
         OR: [
@@ -578,7 +583,6 @@ class TeamService {
         },
       },
     });
-    console.log('🚀 ~ TeamService ~ getPendingRequests ~ teamDetails:', teamDetails);
     const parsedTeamId = teamDetails?.id;
     const parsedUserId = parseInt(userId);
 
@@ -590,7 +594,6 @@ class TeamService {
         role: 'TEAM_LEADER',
       },
     });
-    console.log('🚀 ~ TeamService ~ getPendingRequests ~ isLeader:', isLeader);
     if (!isLeader) {
       throw HttpException.notFound('Only the team leader can view pending requests.');
     }
@@ -612,8 +615,6 @@ class TeamService {
         },
       },
     });
-    console.log('🚀 ~ TeamService ~ getPendingRequests ~ requests:', requests);
-
     return requests;
   }
   async addTeamMedia( mediaUrl: string, type: string, userId: number) {
@@ -637,7 +638,6 @@ class TeamService {
       });
       return newMedia;
     } catch (error) {
-      console.error('Error in addTeamMedia:', error);
       throw  HttpException.internalServerError('Failed to add media');
     }
   }
@@ -663,8 +663,77 @@ class TeamService {
       
       return media;
     } catch (error) {
-      console.error('Error in getTeamMedia:', error);
       throw HttpException.internalServerError('Failed to fetch media');
+    }
+  }
+  async getAllTeams(){
+    try {
+      const teams = await prisma.teams.findMany({
+        include: {
+          teamPlayers: {
+            include: {
+              user: {
+                select: {
+                  id:true,
+                  role:true,
+                  username: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      });
+      return teams;
+    } catch (error) {
+      throw HttpException.internalServerError('Failed to fetch all teams');
+    }
+  }
+   async leaveTeam(userId: string) {
+    const uid = parseInt(userId, 10);
+
+    // find their team-membership row
+    const membership = await prisma.teamPlayers.findFirst({
+      where: { user_id: uid },
+    });
+    if (!membership) {
+      throw HttpException.notFound('You are not a member of any team.');
+    }
+
+    // team-leaders can’t simply “leave” (must transfer or delete)
+    if (membership.role === 'TEAM_LEADER') {
+      throw HttpException.badRequest(
+        'Team leaders cannot leave their own team. Transfer leadership or delete the team first.'
+      );
+    }
+
+    // delete that row
+    await prisma.teamPlayers.delete({
+      where: { id: membership.id },
+    });
+
+    return { message: 'You have successfully left the team.' };
+  }
+  async updateTeam(id:string,team_name:string,max_players:string,description:string,team_icon:string){
+    const parsedTeamId = parseInt(id);
+    console.log("🚀 ~ TeamService ~ updateTeam ~ parsedTeamId:", parsedTeamId)
+    const parsedMaxPlayers = parseInt(max_players);
+    console.log("🚀 ~ TeamService ~ updateTeam ~ parsedMaxPlayers:", parsedMaxPlayers)
+    try {
+      const updatedTeam = await prisma.teams.update({
+        where: { id: parsedTeamId },
+        data: {
+          team_name,
+          max_players: parsedMaxPlayers,
+          description,
+          logo: team_icon,
+        },
+      });
+      console.log("🚀 ~ TeamService ~ updateTeam ~ updatedTeam:", updatedTeam)
+      return updatedTeam;
+    } catch (error) {
+      console.log("🚀 ~ TeamService ~ updateTeam ~ error:", error)
+      throw HttpException.internalServerError('Failed to update team');
     }
   }
 }

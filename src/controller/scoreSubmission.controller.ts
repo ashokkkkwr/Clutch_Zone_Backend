@@ -7,12 +7,9 @@ import scoreSubmissionService from '../services/scoreSubmission.service';
 
 class ScoreSubmissionController {
   async createSubmission(req: Request, res: Response) {
-    console.log('ya xitro??');
     try {
       const data ={...req.body};
-      console.log("🚀 ~ ScoreSubmissionController ~ createSubmission ~ data:", data)
       const matchId = req.params.id;
-      console.log('🚀 ~ ScoreSubmissionController ~ createSubmission ~ matchId:', matchId);
       const userId = req.user?.id;
       const files = req.files as {[fieldname: string]: Express.Multer.File[]} | undefined;
       const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -27,7 +24,6 @@ class ScoreSubmissionController {
         userId as string);
       res.status(201).json({data: scoreService});
     } catch (error: any) {
-    console.log('🚀 ~ ScoreSubmissionController ~ createSubmission ~ error:', error);
     res.status(500).json({error: error.message});
     }
   }
@@ -40,10 +36,8 @@ class ScoreSubmissionController {
     }
   }
   async giveDecision(req:Request,res:Response){
-    console.log('ya pugoo???')
     try {
       const {decision} = req.body;
-      console.log("🚀 ~ ScoreSubmissionController ~ giveDecision ~ decision:", decision)
       const submissionId = req.params.id;
       const userId = req.user?.id;
       const submission = await scoreSubmissionService.giveDecision(submissionId, decision, userId);

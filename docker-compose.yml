@@ -1,31 +1,44 @@
 version: '3.8'
-
 services:
-  database:
-    image: postgres:15
-    container_name: clutch_postgres
-    restart: always
+  db:
+    image: postgres:15-alpine
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: exoticshok1A
       POSTGRES_DB: prisma
+    volumes:
+      - prisma-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
   backend:
-    build: .
-    container_name: clutch_backend
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      - database
+      - db
+      - redis
     environment:
-      DATABASE_URL: postgresql://postgres:exoticshok1A@database:5432/prisma
-      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:exoticshok1A@postgresql://postgres:exoticshok1A@clutchzone-db.c5suyk4mo6z9.eu-north-1.rds.amazonaws.com/prisma:5432/prisma
+      
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       PORT: 5000
     ports:
-      - "5000:5000"
+      - "8000:5000"
+    restart: on-failure
+    # <- Run migrations, then start server
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        node build/src/server.js
+      "
+
 
 volumes:
-  postgres_data:
+  prisma-data:

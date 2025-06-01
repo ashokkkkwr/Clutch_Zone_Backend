@@ -6,9 +6,11 @@ const prisma = new PrismaClient();
 class FavouriteService {
     async addFavourite(data: any, userId: any) {
         const gameid = data.gameId; // Correct key
-        console.log("🚀 ~ FavouriteService ~ addFavourite ~ gameid:", gameid);
-        console.log("🚀 ~ FavouriteService ~ addFavourite ~ data:", data);
+        console.log("🚀 ~ FavouriteService ~ addFavourite ~ gameid:", gameid)
+       if(!gameid){
+        return HttpException.internalServerError("Game Id is required in the body");
 
+       }
         try {
             const ifAlreadyExists = await prisma.game_favaurites.findFirst({
                 where: {
@@ -17,9 +19,8 @@ class FavouriteService {
                 }
             });
 
-            console.log("🚀 ~ FavouriteService ~ addFavourite ~ ifAlreadyExists:", ifAlreadyExists);
             if (ifAlreadyExists) {
-                return  HttpException.badRequest('Game is already in your favourites');
+                throw HttpException.internalServerError("Internal server error");
             }
 
             const savedFavourite = await prisma.game_favaurites.create({
@@ -33,6 +34,7 @@ class FavouriteService {
         } catch (error) {
             console.error('Error adding favourite:', error);
             // throw new HttpException(500, 'Internal server error');
+            return
         }
     }
     async getUserFavourite(userId: string){

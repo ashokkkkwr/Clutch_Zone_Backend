@@ -15,6 +15,7 @@ import bodyParser from 'body-parser';
 import { authenticateGraphql } from './authentication.graphql';
 import { PrismaClient } from '@prisma/client';
 import BcryptService from '../utils/bcryptService';
+import { Role } from '../constant/enum';
 
 const prisma = new PrismaClient();
 // Define the GraphQL Context interface
@@ -25,7 +26,6 @@ interface GraphQLContext {
     role?: string;
   };
 }
-
 const middleware = async (app: Application) => {
   console.log('DotenvConfig.CORS_ORIGIN', DotenvConfig.CORS_ORIGIN);
   app.use(compression());
@@ -79,7 +79,6 @@ const middleware = async (app: Application) => {
       },
     })
   );
-
 const findIfExists= await prisma.user.findFirst({
   where:{
     email: 'admin@gmail.com'
@@ -87,23 +86,25 @@ const findIfExists= await prisma.user.findFirst({
 })
 const password='admin'
   const hash = await BcryptService.hash(password);
-  // const detele= await prisma.user.delete({
-  //   where:{
-  //     email: 'admin@gmail.com'
-  //   }
-  // })
-
   if(!findIfExists){
     const seedAdmin= await prisma.user.create({
       data:{
         email: 'admin@gmail.com',
         password: hash,
         username: 'admin',
-        role: 'admin',
+        role: Role.ADMIN,
       }
     })
   }
   app.use('/api', routes);
+  app.get('/health', (req, res) => {
+    res.status(200).json({
+      status: 'OK',
+      uptime: process.uptime(),
+      timestamp: Date.now(),
+    });
+  });
+  
   app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')));
   console.log('Static files path:', path.join(__dirname, '..', '..', 'uploads'));
  

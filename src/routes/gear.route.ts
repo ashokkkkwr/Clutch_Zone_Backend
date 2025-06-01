@@ -1,14 +1,3 @@
-// import type {Router as IRouter} from 'express';
-// import Router from 'express';
-// import gameController from '../controller/game.controller';
-// import {catchAsync} from '../utils/catchAsync.utils';
-// import {gamesImagesUpload} from '../middleware/multer.middleware';
-// const router:IRouter=Router()
-// router.post('/create', gamesImagesUpload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),catchAsync(gameController.createGame))
-// router.get('/:id',catchAsync(gameController.getGame))
-// router.patch('/update/:id',  gamesImagesUpload.fields([{ name: 'game_cover_image' }, { name: 'game_icon' }]),
-// catchAsync(gameController.updateGame));
-// export default router
 
 
 import type {Router as IRouter} from 'express';
@@ -16,7 +5,22 @@ import Router from 'express'
 import gearController from '../controller/gear.controller';
 import { catchAsync } from '../utils/catchAsync.utils';
 import { gearImagesUpload } from '../middleware/multer.middleware';
+import { authentication } from '../middleware/authentication.middleware'
+
 const router:IRouter=Router()
 router.post('/create',gearImagesUpload.fields([{name:'image'}]),catchAsync(gearController.createGear))
+router.patch('/update-gear/:id',gearImagesUpload.fields([{name:'image'}]),catchAsync(gearController.updateGear))
+router.use(authentication());
+router.delete('/delete-gear/:id',(gearController.deleteGear))
+
+router.post('/add-to-cart',catchAsync(gearController.addToCart));
+router.get('/get-cart',catchAsync(gearController.getCart));
+router.delete('/delete-cart/:gearId',catchAsync(gearController.removeCart));
+router.post('/addOrders',catchAsync(gearController.placeOrder))
+router.get('/getOrders',catchAsync(gearController.listOrder));
+router.patch(
+  '/update-cart/:gearId',
+  catchAsync(gearController.updateCartQuantity)
+);
 
 export default router

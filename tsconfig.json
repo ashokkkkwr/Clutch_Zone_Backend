@@ -12,7 +12,7 @@
     "module": "commonjs",
     "outDir": "./build/",
     "rootDir": "",
-    "strict": true,
+    "strict": false,
     "baseUrl": "./src/",
     "paths": {
       "*": [
@@ -24,7 +24,8 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+
   },
   "include": [
     "src/**/*.ts"

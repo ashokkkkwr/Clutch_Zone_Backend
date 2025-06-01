@@ -6,14 +6,10 @@ import webTokenService from '../utils/webToken.service'
 
 export const authentication = () => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log('ya?')
-    /**
-     * extracts the authorization header from the request and split it by spaces.
-     * The result is an array('tokens') where the first element should be token
-     * type(eg:Bearer) and the second element should be the actual token.
-     */
+
+  
     const tokens = req.headers.authorization?.split(' ')
-    console.log("🚀 ~ return ~ tokens:", tokens)
+  
     try {
       if (!tokens) {
         throw HttpException.unauthorized(Message.notAuthorized)
@@ -25,7 +21,7 @@ export const authentication = () => {
       const payload = webTokenService.verify(accessToken, DotenvConfig.ACCESS_TOKEN_SECRET)
       if (payload) {
         req.user = payload
-    console.log('ougo')
+   
         next()
       } else {
         throw HttpException.unauthorized(Message.notAuthorized)

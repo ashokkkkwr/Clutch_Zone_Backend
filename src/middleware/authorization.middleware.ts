@@ -5,7 +5,7 @@ import HttpException from '../utils/HttpException.utils'
 
 export const authorization = (roles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.user);
+
     if (!req.user) throw HttpException.unauthorized(Message.notAuthorized)
     try {
       const userRole = req.user.role

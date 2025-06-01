@@ -12,7 +12,7 @@ export class ChatSocket {
         origin: '*', 
       },
     });
-    io.use((socket, next) => {
+    io.use((socket, next) => { 
       
       const token = socket.handshake.auth.token;
       if (!token) {
@@ -21,7 +21,7 @@ export class ChatSocket {
       try {
         const payload = webTokenService.verify(token, DotenvConfig.ACCESS_TOKEN_SECRET);
         if (payload) {
-          socket.data.user = payload;
+          socket.data.user = payload    ;
           next();
         } else {
           return next(HttpException.unauthorized(Message.notAuthorized));
@@ -33,6 +33,7 @@ export class ChatSocket {
           return next(HttpException.unauthorized(Message.notAuthorized));
         }
       }
+
     });
 
     io.on('connection', async (socket) => {

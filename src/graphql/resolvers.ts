@@ -56,12 +56,10 @@ return gearService.getGear();
     },
     getClutchBucks:async(_:any, args:any,context:any)=>{
       const clutchLists=await  paymentService.getClutchBucks();
-      console.log("🚀 ~ clutchLists:", clutchLists)
       return clutchLists
     },
     getPendingRequests: async (_: any, args: any, context: any) => {
       const userId = authenticateUser(context);
-      console.log('🚀 ~ userId:', userId);
       return await teamService.getPendingRequests(userId);
     },
   },
@@ -69,32 +67,28 @@ return gearService.getGear();
     initiateEsewaPayment: async(_:any,{tournamentId}:{tournamentId:string},context:any)=>{
       const userId = authenticateUser(context);
       const esewaPayment = await paymentService.esewaPayment(userId,tournamentId);
-      console.log("🚀 ~ initiateEsewaPayment:async ~ esewaPayment:", esewaPayment)
       return esewaPayment
-
     },
     verifyEsewaPayment:async(_:any,{input}:{input:string},context:any)=>{
       const userId= authenticateUser(context)
       const verify = await paymentService.verifivcationResponse(userId,input)
     },
-    register: async (
-      _: any,
-      {username, email, password}: {username: string; email: string; password: string},
-      {req}: {req: any}, // Access req from context
-    ) => {
-      return userService.register(username, email, password);
-    },
+    // register: async (
+    //   _: any,
+    //   {username, email, password}: {username: string; email: string; password: string},
+    //   {req}: {req: any}, // Access req from context
+    // ) => {
+    //   return userService.register(username, email, password);
+    // },
     declareWinnerAndTime: async (
       _: any,
       {id, winner_id}: {id: string; winner_id: string},
       {req}: {req: any},
     ) => {
-      console.log('🚀 ~ id:', id);
       const success = await tournamentService.declareWinnerAndTime(id, winner_id);
 
       return true;
     },
-
     verifyOtp: async (_: any, {otp, email}: {otp: string; email: string}) => {
       return userService.verifyOtp(otp, email);
     },
@@ -106,27 +100,28 @@ return gearService.getGear();
       return userService.userDetails(id);
     },
     updateBio: async (_: any, {bio}: {bio: string}, context: any) => {
-      console.log('🚀 ~ registerTournamentId:', bio);
       const userId = authenticateUser(context);
-      console.log('🚀 ~ userId:', userId);
       return userService.updateBio(bio, userId);
     },
     registerTournament: async (_: any, {id}: {id: string}, context: any) => {
-      console.log('🚀 ~ registerTournamentId:', id);
       const userId = authenticateUser(context);
-      console.log('🚀 ~ userId:', userId);
       return tournamentService.registerTournament(userId, id);
     },
     updateAmount: async (_: any, {id}: {id: string}, context: any) => {
-      console.log('🚀 ~ registerTournamentId:', id);
       const userId = authenticateUser(context);
-      console.log('🚀 ~ userId:', userId);
       return paymentService.updateAmount(id, userId);
     },
    
-    sendJoinRequest: async (_: any, {teamId}: {teamId: string}, context: any) => {
+    sendJoinRequest: async (_: any, { teamId }: { teamId: string }, context: any) => {
       const userId = authenticateUser(context);
-      return teamService.sendJoinRequest(userId, teamId);
+      try {
+       const ed=  await teamService.sendJoinRequest(userId, teamId);
+        console.log("🚀 ~ sendJoinRequest: ~ ed:", ed)
+        return ed
+      } catch (error: any) {
+        // Forward the error message to the GraphQL client.
+        throw new Error(error.message);
+      }
     },
     acceptRequest: async (_: any, {requestId}: {requestId: string}, context: any) => {
       const leaderId = authenticateUser(context);
@@ -140,15 +135,8 @@ return gearService.getGear();
       return gameService.deleteGame(id as string);
     },
     deleteTournament: async (_: any, {id}: {id: String}) => {
-      console.log('🚀 ~ deleteTournament:async ~ id:', id);
       return tournamentService.deleteTournament(id as string);
     },
-    // createBucks:async(_:any,{amount,cBucks,description}:{amount:string,cBucks:string,description:string},context:any)=>{
-    //   console.log("🚀 ~ createBucks:async ~ description:", description)
-    //   console.log("🚀 ~ createBucks:async ~ cBucks:", cBucks)
-    //   console.log("🚀 ~ createBucks:async ~ amount:", amount)
-    //   const userId= authenticateUser(context);
-    //   return paymentService.createBucks(amount,cBucks,description,userId,)
-    // }
+   
   },
 };

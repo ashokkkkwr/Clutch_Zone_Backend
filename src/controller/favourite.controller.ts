@@ -13,6 +13,9 @@ class FavouriteController {
 
         try {
             const savedFavourite = await FavouriteService.addFavourite(data, userId);
+            if(savedFavourite instanceof Error){
+                res.status(500).json({ message: savedFavourite.message });  
+            }
             res.status(200).json({
                 data: savedFavourite,
                 message: 'Favourite added successfully'

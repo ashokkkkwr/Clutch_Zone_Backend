@@ -1,23 +1,7 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-// const gameCoverStorage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'uploads/gameCoverImages');
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + path.extname(file.originalname));
-//   }
-// });
 
-// const gameIconStorage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, 'uploads/gameIconImages');
-//   },
-//   filename: (req, file, cb) => {
-//     cb(null, Date.now() + path.extname(file.originalname));
-//   }
-// });
 
 const ensureDirectoryExistence = (directory: fs.PathLike) => {
   if(!fs.existsSync(directory)){
@@ -25,6 +9,7 @@ const ensureDirectoryExistence = (directory: fs.PathLike) => {
   }
 }
 // paths for the folders
+const profileImagesPath = "uploads/profileImages";
 const gameCoverImagesPath = "uploads/gameCoverImages";
 const gameIconImagesPath = "uploads/gameIconImages";
 const tournamentIconImagesPath = "uploads/tournamentIconImages";
@@ -44,6 +29,7 @@ ensureDirectoryExistence(teamImagePath);
 ensureDirectoryExistence(bucksPath)
 ensureDirectoryExistence(scoreSubmissionPath)
 ensureDirectoryExistence(teamMediaPath);
+ensureDirectoryExistence(profileImagesPath);
 
 const gameStorage= multer.diskStorage({
   destination: (req, file, cb) => {
@@ -125,6 +111,16 @@ const teamMediaStorage=multer.diskStorage({
     cb(null, Date.now() + path.extname(file.originalname));
   }
 })
+const profileStorage=multer.diskStorage({
+  destination: (req, file, cb) => {
+    if(file.fieldname==='image'){
+      cb(null,profileImagesPath );
+    }
+  },
+  filename:(req,file,cb) =>{
+    cb(null,Date.now()+path.extname(file.originalname));
+  }
+})
 
 
 const fileFilter = (req: any, file: any, cb: any) => {
@@ -166,3 +162,7 @@ export const teamMediaUpload = multer({
   storage:teamMediaStorage,
   fileFilter:fileFilter
 });
+export const profileImagesUpload = multer({
+  storage:profileStorage,
+  fileFilter:fileFilter
+})

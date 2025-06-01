@@ -6,7 +6,7 @@ import { Environment } from '../constant/enum'
 const log = console.log
 
 class Print {
-  static error(message: string): void {
+  static error(message: string, error: any): void {
     if (DotenvConfig.NODE_ENV === Environment.DEVELOPMENT) log(chalk.red('ERROR: ', message))
     else Logger.error(message)
   }

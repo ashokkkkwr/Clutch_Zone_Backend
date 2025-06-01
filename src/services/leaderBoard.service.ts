@@ -183,8 +183,5 @@ class LeaderBoardService {
         } catch (error) {
             console.error(error);
             throw  HttpException.internalServerError( "Error fetching leaderboard data");
-        }
-    }
-}
-
+        }}}
 export default new LeaderBoardService();

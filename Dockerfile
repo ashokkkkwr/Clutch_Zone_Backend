@@ -1,24 +1,49 @@
-# Use the official Node.js image as the base
-FROM node:18-alpine
+# ── STAGE 1: Build ───────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
 
-# Set the working directory inside the container
+# set workdir
 WORKDIR /app
 
-# Copy package.json and pnpm-lock.yaml (or package-lock.json) to install dependencies
-COPY package.json pnpm-lock.yaml ./
+# copy package metadata & install all (including devDeps for TS compile)
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install --production
 
-# Copy the entire project to the container
-COPY . .
+# Copy Prisma schema before running generate
+COPY prisma ./prisma
+RUN npx prisma generate      # ✅ Now this works correctly
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=5000
 
-# Expose the application port
+# copy tsconfig, source code and dotenv
+COPY tsconfig.json ./
+COPY src ./src
+COPY .env ./
+
+RUN npm install
+
+# compile TS to JS (outputs to ./build per tsconfig)
+RUN npx tsc
+
+# ── STAGE 2: Runtime ─────────────────────────────────────────────────────────────
+FROM node:20-alpine
+WORKDIR /app
+
+# 1) install only production deps
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# 2) bring in your compiled JS & env from the builder
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/.env .env
+
+# 3) bring in your Prisma schema + migrations so `prisma migrate deploy` can see them
+COPY --from=builder /app/prisma ./prisma
+
+# 4) copy the generated Prisma client
+COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
+
 EXPOSE 5000
 
-# Run the application
-CMD ["npm", "run", "start"]
+# 5) at container startup run your migrations and then the server
+CMD ["sh", "-c", "npx prisma migrate deploy && node build/src/server.js"]

@@ -19,7 +19,7 @@ const prisma = new PrismaClient();
 class PaymentService {
   async esewaPayment(userId: string, tournamentId: string) {
     try {
-      console.log('first');
+     
       const tournament = await prisma.tournament.findUnique({
         where: {
           id: parseInt(tournamentId),
@@ -51,20 +51,17 @@ class PaymentService {
       ].join(',');
 
       const secretKey = DotenvConfig.ESEWA_SECRET_KEY ?? '';
-      console.log('🚀 ~ PaymentService ~ esewaPayment ~ secretKey:', secretKey);
       const signature = crypto
         .createHmac('sha256', secretKey)
         .update(signatureData)
         .digest('base64');
-      console.log('ya saman');
-      console.log('🚀 ~ UserService ~ esewaPayment ~ paymentUrl:', DotenvConfig.ESEWA_PAYMENT_URL);
-
+  
       return {
         paymentUrl: DotenvConfig.ESEWA_PAYMENT_URL,
         params: {...params, signature},
       };
     } catch (error) {
-      console.log('🚀 ~ UserService ~ esewaPayment ~ error:', error);
+      throw new Error('Failed to initiate payment');
     }
   }
   async verifivcationResponse(userId: string, input: any) {
@@ -92,58 +89,13 @@ class PaymentService {
       tournament: participant.tournament,
     };
   }
-  async createBucks(
-    amount: string,
-    price: string,
-    description: string,
-    userId: string,
-    buckImage: string,
-    bonus: string,
-  ) {
-    console.log('🚀 ~ PaymentService ~ bonus:', bonus);
-    try {
-      console.log('🚀 ~ PaymentService ~ createBucks ~ userId:', userId);
-      console.log('🚀 ~ PaymentService ~ createBucks ~ description:', description);
-      console.log('🚀 ~ PaymentService ~ createBucks ~ amount:', amount);
-      const user = await prisma.user.findUnique({
-        where: {
-          id: Number(userId),
-        },
-      });
-      if (user?.role !== 'admin') {
-        console.log('yua??');
-        throw new Error('Must be admin to perform this action.');
-      }
-      console.log('ya saman??');
-      const create = await prisma.payment_bucks.create({
-        data: {
-          amount: Number(amount),
-          price: Number(price),
-          description,
-          buckImage,
-          bonus: Number(bonus),
-        },
-      });
-      console.log('create vayena ra?');
-      return create;
-    } catch (error) {
-      console.log('🚀 ~ PaymentService ~ createBucks ~ error:', error);
-    }
-  }
-  async getClutchBucks() {
-    const bucksLists = await prisma.payment_bucks.findMany();
-    console.log('🚀 ~ PaymentService ~ getClutchBucks ~ bucksLists:', bucksLists);
-    return bucksLists;
-  }
+
   async updateAmount(paymentId: string, user_id: string) {
-    console.log('🚀 ~ PaymentService ~ updateAmount ~ user_id:', user_id);
-    console.log('🚀 ~ PaymentService ~ updateAmount ~ paymentId:', paymentId);
     const find = await prisma.payment_bucks.findFirst({
       where: {
         id: Number(paymentId),
       },
     });
-    console.log('🚀 ~ PaymentService ~ updateAmount ~ find:', find);
 
     if (!find) {
       throw new Error('Payment not found');
@@ -161,25 +113,18 @@ class PaymentService {
     });
   }
   async paymentSuccess(data: any, userId: string) {
-    console.log("🚀 ~ PaymentService ~ paymentSuccess ~ data:", data)
-    console.log("🚀 ~ PaymentService ~ paymentSuccess ~ data:", data.clutch_bucks_id)
     try {
       const clutch_bucks = await prisma.payment_bucks.findFirst({
         where: {
           id: Number(data.clutchbuck_id),
         },
       });
-      console.log('🚀 ~ PaymentService ~ paymentSuccess ~ clutch_bucks:', clutch_bucks);
       const payment_buck_transaction = await prisma.payment_bucks_transaction.create({
         data: {
           user_id: Number(userId),
           payment_bucks_id: Number(data.clutchbuck_id),
         },
       });
-      console.log(
-        '🚀 ~ PaymentService ~ paymentSuccess ~ payment_buck_transaction:',
-        payment_buck_transaction,
-      );
       const user = await prisma.user.update({
         where: {
           id: Number(userId),
@@ -190,12 +135,72 @@ class PaymentService {
           },
         },
       });
-      
-      console.log('🚀 ~ PaymentService ~ paymentSuccess ~ user:', user);
-      console.log('🚀 ~ paymentSuccess ~ user:', user);
+  
     } catch (error) {
-      console.log('🚀 ~ PaymentService ~ paymentSuccess ~ error:', error);
+      throw new Error('Payment processing failed');
     }
+  }
+  async createBucks(
+    amount: string,
+    price: string,
+    description: string,
+    userId: string,
+    buckImage: string,
+    bonus: string,
+  ) {
+    try {
+      console.log('ya aipugo?')
+    
+      const user = await prisma.user.findUnique({
+        where: {
+          id: Number(userId),
+        },
+      });
+      console.log("🚀 ~ PaymentService ~ user:", user)
+      if (user?.role !== 'ADMIN') {
+        throw new Error('Must be admin to perform this action.');
+      }
+      const create = await prisma.payment_bucks.create({
+        data: {
+          amount: Number(amount),
+          price: Number(price),
+          description,
+          buckImage,
+          bonus: Number(bonus),
+        },
+      });
+      console.log("🚀 ~ PaymentService ~ create:", create)
+      return create;
+    } catch (error) {
+
+      }
+  }
+  async getClutchBucks() {
+    const bucksLists = await prisma.payment_bucks.findMany();
+    return bucksLists;
+  }
+  async updateBucksPackage(
+    id: string,
+    data: {
+      amount?: number | string;
+      price?: number | string;
+      description?: string;
+      bonus?: number | string;
+      buckImage?: string;
+    }
+  ) {
+    const updateData: Record<string, any> = {};
+
+    if (data.amount !== undefined) updateData.amount = Number(data.amount);
+    if (data.price !== undefined)  updateData.price = Number(data.price);
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.bonus !== undefined)      updateData.bonus = Number(data.bonus);
+    if (data.buckImage)                  updateData.buckImage = data.buckImage;
+
+    return prisma.payment_bucks.update({
+      where: { id: Number(id) },
+      data: updateData,
+    });
   }
 }
 export default new PaymentService();

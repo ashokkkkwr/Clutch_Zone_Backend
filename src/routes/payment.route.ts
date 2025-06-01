@@ -19,5 +19,11 @@ import {authentication} from '../middleware/authentication.middleware';
 const router: IRouter = Router();
 
 router.post('/create',authentication(),buckImagesUpload.fields([{name:'image'}]),catchAsync(paymentController.createBucks));
+router.patch(
+    '/update/:id',
+    authentication(),
+    buckImagesUpload.fields([{ name: 'image' }]),
+    catchAsync(paymentController.updateBucks)
+  );
 router.post('/paymentsuccess',authentication(),catchAsync(paymentController.paymentSuccess));
 export default router;

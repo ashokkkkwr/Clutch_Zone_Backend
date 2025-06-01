@@ -4,8 +4,11 @@ import tournament from '../services/tournament.service';
 import {Request,Response} from 'express';
 class TournamentController{
     async createTournament(req:Request,res:Response){
-        console.log(req.body,'req')
-        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePools, is_points_based,total_rounds}=req.body;
+        try{
+
+        
+        console.log(req.body)
+        const{tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePools, is_points_based,total_rounds,match_interval}=req.body;
         const files =req.files as {[fieldname:string]:Express.Multer.File[]}|undefined;
         const baseUrl = `${req.protocol}://${req.get('host')}`
         const prizePoolsArray = JSON.parse(prizePools);
@@ -20,15 +23,15 @@ class TournamentController{
             : null;
 
 
-          console.log(typeof(prizePools))  
          
 
-        console.log("🚀 ~ TournamentController ~ createTournament ~ tournament_cover:", tournament_cover)
-        console.log("🚀 ~ TournamentController ~ createTournament ~ total_player:", total_player)
-        
 
-        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePoolsArray, is_points_based,total_rounds)
+        const saved=await tournament.createTournament(tournament_icon!,tournament_cover!,tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id,total_player,prizePoolsArray, is_points_based,total_rounds,match_interval)
         return res.status(201).json({message:'Tournament created successfully',data:saved});
+        }catch(error){
+            console.log(error)
+            return res.status(500).json({message:'Internal server error',error})
+        }
     }
     async updateTournament(req:Request,res:Response){
         const {tournament_name,tournament_description,tournament_entry_fee,tournament_start_date,tournament_end_date,tournament_registration_start_date,tournament_registration_end_date,tournament_game_mode,tournament_streaming_link,games_id}=req.body;
@@ -62,9 +65,7 @@ class TournamentController{
     }
     async fetchBrackets(req: Request, res: Response){
         const {id} = req.params;
-        console.log("🚀 ~ TournamentController ~ fetchBrackets ~ id:", id)
         const bracket = await tournament.getTournamentBracket(Number(id));
-        console.log("🚀 ~ TournamentController ~ fetchBrackets ~ bracket:", bracket)
         return res.status(200).json(bracket);
     } 
     async registerTournament(req:Request,res:Response){
@@ -72,7 +73,6 @@ class TournamentController{
         const userId = req?.user?.id;
 
         const register = await tournament.registerTournament(userId!,id)
-        console.log("🚀 ~ TournamentController ~ registerTournament ~ register:", register)
     }
     async getUserMatches(req:Request,res:Response){
         const userId = req.user?.id;

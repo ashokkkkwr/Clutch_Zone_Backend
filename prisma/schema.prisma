@@ -22,27 +22,17 @@ model in_game_id {
   player_id String @map("player_id")
   user_id   Int    @unique // Ensure this is unique
   game_id   Int
-  user      user   @relation(fields: [user_id], references: [id])
-  game      games  @relation(fields: [game_id], references: [id])
-  
+  user      user   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  game      games  @relation(fields: [game_id], references: [id],onDelete: Cascade)
+
 }
 
-model notification {
-  id       Int     @id @default(autoincrement())
-  message  String
-  users    String?
-  sender   Int
-  receiver Int
-  links    String?
-  is_read  Boolean @default(false) @map("is_read")
-  user     user    @relation(fields: [sender], references: [id])
-}
 
 model prize_pool {
   id            Int        @id @default(autoincrement())
   prize         Int
   placements    Int
-  tournament    tournament @relation(fields: [tournament_id], references: [id])
+  tournament    tournament @relation(fields: [tournament_id], references: [id],onDelete: Cascade)
   tournament_id Int
 }
 
@@ -59,7 +49,9 @@ model teams {
   matchesAsTeam1     Match[]       @relation(name: "Team1")
   matchesAsTeam2     Match[]       @relation(name: "Team2")
   Match              Match[]       @relation(name: "WinnerTeam")
+  //make nullable
 
+CreatedAt          DateTime?     @default(now())
   TeamJoinRequest TeamJoinRequest[]
 
   team_media team_media[]
@@ -74,7 +66,7 @@ model team_media{
 
   team teams @relation(fields: [team_id], references: [id])
   user_id Int
-  user user @relation(fields: [user_id], references: [id])
+  user user @relation(fields: [user_id], references: [id], onDelete: Cascade)
  
 }
 
@@ -87,7 +79,7 @@ model TeamJoinRequest {
   updatedAt DateTime      @updatedAt @map("updated_at")
 
   team teams @relation(fields: [team_id], references: [id])
-  user user  @relation(fields: [user_id], references: [id])
+  user user  @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("team_join_requests")
 }
@@ -103,8 +95,8 @@ model TeamPlayers {
   role    TeamPlayerRole @default(PLAYER) @map("role")
   team_id Int
   user_id Int            @unique
-  team    teams          @relation(fields: [team_id], references: [id])
-  user    user           @relation(fields: [user_id], references: [id])
+  team    teams          @relation(fields: [team_id], references: [id], onDelete: Cascade)
+  user    user           @relation(fields: [user_id], references: [id],onDelete: Cascade)
 }
 
 enum TeamPlayerRole {
@@ -136,7 +128,7 @@ model tournament {
   total_player                       Int
   games                              games     @relation(fields: [games_id], references: [id])
   status          TournamentStatus @default(UPCOMING)
-
+match_interval Int @default(30)
   prize_pools        prize_pool[]
   tournament_results tournament_result[]
   tournament_history tournament_history[]
@@ -146,9 +138,11 @@ model tournament {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
   winnerId           Int? // New field to store the winner
-  winner             user?                @relation(fields: [winnerId], references: [id])
+  winner             user?                @relation(fields: [winnerId], references: [id], onDelete: Cascade)
   is_points_based    Boolean              @default(false) // New field to indicate points-based tournament
   total_rounds       Int? // Number of rounds in the tournament
+
+  Notification Notification[]
 }
 
 model Bracket {
@@ -157,7 +151,7 @@ model Bracket {
   tournamentId Int        @unique
   tournament   tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   user_id      Int?
-  user         user?      @relation(fields: [user_id], references: [id])
+  user         user?      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -174,7 +168,6 @@ enum MatchStatus {
   COMPLETED
 }
 
-
 model Match {
   id           Int        @id @default(autoincrement())
   tournament   tournament @relation(fields: [tournamentId], references: [id])
@@ -184,38 +177,34 @@ model Match {
   player1Id    Int?
   player2Id    Int?
   winnerId     Int?
-  player1      user?      @relation(name: "Player1", fields: [player1Id], references: [id])
-  player2      user?      @relation(name: "Player2", fields: [player2Id], references: [id])
-  winner       user?      @relation(name: "Winner", fields: [winnerId], references: [id])
+  player1      user?      @relation(name: "Player1", fields: [player1Id], references: [id], onDelete: Cascade)
+  player2      user?      @relation(name: "Player2", fields: [player2Id], references: [id],onDelete: Cascade)
+  winner       user?      @relation(name: "Winner", fields: [winnerId], references: [id], onDelete: Cascade)
   team1Id      Int?
   team2Id      Int?
   winnerTeamId Int?
   team1        teams?     @relation(name: "Team1", fields: [team1Id], references: [id])
   team2        teams?     @relation(name: "Team2", fields: [team2Id], references: [id])
   winnerTeam   teams?     @relation(name: "WinnerTeam", fields: [winnerTeamId], references: [id])
-
-  
   scoreSubmitted Boolean @default(false) @map("score_submitted")
-
   status          MatchStatus       @default(SCHEDULED)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   match_time      DateTime?
   ScoreSubmission ScoreSubmission[]
-
   @@unique([tournamentId, round, position])
   @@map("matches")
+  Notification Notification[]
 }
 
 
 model ScoreSubmission {
   id            Int              @id @default(autoincrement())
   matchId       Int
-  match         Match            @relation(fields: [matchId], references: [id])
+  match         Match            @relation(fields: [matchId], references: [id],onDelete: Cascade)
   kills         Int? // For points-based tournaments
   placement     Int? // For points-based tournaments
   playerScore   Int? // For elimination (user's score)
-  // opponentScore Int? // For elimination (opponent's score)
   screenshot    String
   submittedBy   Int // User ID of submitter
   isTeam        Boolean          @default(false)
@@ -230,7 +219,6 @@ enum SubmissionStatus {
   APPROVED
   REJECTED
 }
-
 model user {
   id                  Int                  @id @default(autoincrement())
   username            String
@@ -250,7 +238,6 @@ model user {
   otpExpiration       DateTime?
   wallet              wallet[]
   teamPlayers         TeamPlayers?
-  notifications       notification[]
   in_game_ids         in_game_id[]
   Withdraw_request    withdraw_request[]
   gear_purchases      gear_purchase[]
@@ -269,24 +256,27 @@ otpVerified Boolean @default(false)
   createdAt    DateTime   @default(now())
   game_favaurites game_favaurites[]
   team_media team_media[]
+  Notification Notification[]
+
+  CartItem CartItem[]
+
+  Order Order[]
 }
 
 model Participant {
   id           Int        @id @default(autoincrement())
   userId       Int?
-  user         user?      @relation(fields: [userId], references: [id])
+  user         user?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   teamId       Int?
   team         teams?     @relation(fields: [teamId], references: [id])
-  tournament   tournament @relation(fields: [tournamentId], references: [id])
+  tournament   tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int
   seed         Int?
   points       Int        @default(0)
   createdAt    DateTime   @default(now())
-
   @@unique([userId, tournamentId])
   @@map("participants")
 }
-
 model tournament_result {
   id            Int        @id @default(autoincrement())
   placement     String?
@@ -294,15 +284,13 @@ model tournament_result {
   time_slot_id  Int
   tournament    tournament @relation(fields: [tournament_id], references: [id])
 }
-
 model wallet {
   id           Int                  @id @default(autoincrement())
   balance      Float                @default(0.0)
   user_id      Int                  @unique
-  user         user                 @relation(fields: [user_id], references: [id])
+  user         user                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
   transactions wallet_transaction[]
 }
-
 model withdraw_request {
   id                  Int     @id @default(autoincrement())
   withdraw_amount     Float   @map("withdraw_amount")
@@ -313,7 +301,7 @@ model withdraw_request {
   bank_name           String? @map("bank_name")
   status              String  @default("pending")
   user_id             Int
-  user                user    @relation(fields: [user_id], references: [id])
+  user                user    @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 enum Role {
@@ -334,6 +322,10 @@ model gear {
   updated_at       DateTime           @updatedAt
   gear_purchase    gear_purchase[]
   gear_transaction gear_transaction[]
+
+  CartItem CartItem[]
+
+  OrderItem OrderItem[]
 }
 
 model gear_purchase {
@@ -343,8 +335,8 @@ model gear_purchase {
   quantity     Int      @default(1)
   total_cost   Float    @map("total_cost")
   purchased_at DateTime @default(now())
-  gear         gear     @relation(fields: [gear_id], references: [id])
-  user         user     @relation(fields: [user_id], references: [id])
+  gear         gear     @relation(fields: [gear_id], references: [id], onDelete: Cascade)
+  user         user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 model top_up_option {
@@ -366,7 +358,7 @@ model top_up_transaction {
   transaction_id   String? // Reference to external payment ID
   status           String        @default("pending") // e.g., "completed", "failed"
   created_at       DateTime      @default(now())
-  user             user          @relation(fields: [user_id], references: [id])
+  user             user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   top_up_option    top_up_option @relation(fields: [top_up_option_id], references: [id])
 }
 
@@ -387,8 +379,8 @@ model gear_transaction {
   quantity    Int
   total_price Float
   created_at  DateTime @default(now())
-  user        user     @relation(fields: [user_id], references: [id])
-  gear        gear     @relation(fields: [gear_id], references: [id])
+  user        user     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  gear        gear     @relation(fields: [gear_id], references: [id], onDelete: Cascade)
 }
 
 model payment_bucks {
@@ -405,14 +397,62 @@ model payment_bucks_transaction {
   id               Int           @id @default(autoincrement())
   user_id          Int
   payment_bucks_id Int
-  user             user          @relation(fields: [user_id], references: [id])
-  payment_bucks    payment_bucks @relation(fields: [payment_bucks_id], references: [id])
+  user             user          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  payment_bucks    payment_bucks @relation(fields: [payment_bucks_id], references: [id] )
 }
 
 model game_favaurites {
   id      Int   @id @default(autoincrement())
   user_id Int
-  user    user  @relation(fields: [user_id], references: [id])
+  user    user  @relation(fields: [user_id], references: [id], onDelete: Cascade)
   game_id Int
   games   games @relation(fields: [game_id], references: [id])
 }
+model Notification {
+  id                  Int               @id @default(autoincrement())
+  userId              Int
+  user                user              @relation(fields: [userId], references: [id])
+  message             String
+  type                NotificationType
+  relatedTournamentId Int?              // Links to tournament if applicable
+  tournament          tournament?       @relation(fields: [relatedTournamentId], references: [id])
+  relatedMatchId      Int?              // Links to match if applicable
+  match               Match?            @relation(fields: [relatedMatchId], references: [id])
+  read                Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+enum NotificationType {
+  TOURNAMENT_CREATED
+  MATCH_STARTING
+}
+model CartItem {
+  id        Int    @id @default(autoincrement())
+  user      user   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  gear      gear   @relation(fields: [gearId], references: [id], onDelete: Cascade)
+  gearId    Int
+  quantity  Int    @default(1)
+
+  @@unique([userId, gearId])
+}
+
+model Order {
+  id         Int          @id @default(autoincrement())
+  user      user         @relation(fields: [userId], references: [id],onDelete: Cascade)
+  userId     Int
+  totalPrice Float
+  createdAt  DateTime     @default(now())
+  items      OrderItem[]
+}
+
+model OrderItem {
+  id        Int    @id @default(autoincrement())
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  gear      gear   @relation(fields: [gearId], references: [id],onDelete: Cascade)
+  gearId    Int
+  quantity  Int
+  unitPrice Float
+}
+

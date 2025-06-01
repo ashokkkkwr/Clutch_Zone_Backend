@@ -10,7 +10,7 @@ class TeamController {
     const baseUrl = `${req.protocol}://${req.get('host')}`
 
     const userId = req.user?.id;
-    console.log('🚀 ~ TeamController ~ createTeam ~ userId:', userId);
+    console.log("🚀 ~ TeamController ~ createTeam ~ userId:", userId)
 
     const files = req.files as {[fieldname: string]: Express.Multer.File[]} | undefined;
     const team_icon = files?.['image']
@@ -18,16 +18,13 @@ class TeamController {
     : null;
     
     
-    console.log('🚀 ~ TeamController ~ createTeam ~ team_icon:', team_icon);
 if(!team_icon){
   throw new Error('team icon is required')
 }
-    const {team_name, max_players, slug} = req.body;
-    console.log('🚀 ~ TeamController ~ createTeam ~ slug:', slug);
-    console.log('🚀 ~ TeamController ~ createTeam ~ max_players:', max_players);
-    console.log('🚀 ~ TeamController ~ createTeam ~ team_name:', team_name);
-    const create = await team.createTeam(team_name, max_players, slug, team_icon, userId as string);
-    console.log('🚀 ~ TeamController ~ createTeam ~ create:', create);
+    const {team_name, max_players, description} = req.body;
+   
+    const create = await team.createTeam(team_name, max_players, description, team_icon, userId as string);
+    console.log("🚀 ~ TeamController ~ createTeam ~ create:", create)
     return res.status(200).json({
       data: create,
     });
@@ -43,7 +40,6 @@ if(!team_icon){
       }
   
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      console.log("🚀 ~ TeamController ~ uploadTeamMedia ~ files:", files);
   
       const mediaFiles = files?.image || files?.media;
   
@@ -91,8 +87,90 @@ if(!team_icon){
       return res.status(error.statusCode || 500).json({ message: error.message || 'Server error' });
     }
   }
+  async getAllTeams(req: Request, res: Response) {
+    const teams = await team.getAllTeams();
+    return res.status(200).json({
+      data: teams,
+    });
+    
+  }
+  async leaveTeam(req: Request, res: Response) {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw HttpException.unauthorized('Unauthorized user');
+    }
+    const leave = await team.leaveTeam(userId as string);
+    return res.status(200).json({
+      data: leave,
+    });
+  }
+  async changeTeamLeader (req: Request, res: Response)  {
+    const userId = req.user?.id;
+    console.log("🚀 ~ TeamController ~ changeTeamLeader ~ userId:", userId)
+    if (!userId) {
+      throw HttpException.unauthorized('Unauthorized user');
+    }
+    const {teamId, newLeaderId} = req.body;
+    const change = await team.changeTeamLeader( teamId,userId as string, newLeaderId);
+    return res.status(200).json({
+      data: change,
+    });
+  } 
+async removeTeamMember (req: Request, res: Response)  {
+  const userId = req.user?.id;
+  console.log("🚀 ~ TeamController ~ removeTeamMember ~ userId:", userId)
+  if (!userId) {
+    throw HttpException.unauthorized('Unauthorized user');
+  }
+  const {teamId, memberId} = req.body;
+  const remove = await team.removePlayer( teamId,userId as string, memberId);
+  return res.status(200).json({
+    data: remove,
+  });
+
   
-  
+}
+async updateTeam(req:Request,res:Response){
+  try{
+    const baseUrl = `${req.protocol}://${req.get('host')}`
+    const files = req.files as {[fieldname: string]: Express.Multer.File[]} | undefined;
+    console.log("🚀 ~ TeamController ~ updateTeam ~ baseUrl:", baseUrl)
+    const team_icon = files?.['image']
+    ? `${baseUrl}/${files['image'][0].path.replace(/\\/g, '/')}` // Replace backslashes for Windows
+    : null;
+    
+    const {team_name, max_players, description} = req.body;
+    const id = req.params.id;
+    console.log("🚀 ~ TeamController ~ updateTeam ~ id:", id)
+    if(!id){
+      throw new Error('team id is required')
+    }
+    const update = await team.updateTeam(id,team_name,max_players,description,team_icon)
+    console.log("🚀 ~ TeamController ~ updateTeam ~ update:", update)
+    return res.status(200).json({
+      data: update,
+    });
+  }catch(error){
+    res.status(400).json({Message:error.message})
+  }
+}
+async deleteTeam(req:Request,res:Response){
+  try{
+ const teamId = req.params.id;
+  const userId= req.user?.id;
+  if(!teamId){
+    throw new Error('team id is required')
+  }
+  const deleteTeam = await team.deleteTeam(teamId,userId as string)
+  return res.status(200).json({
+    data: deleteTeam,
+  });
+  }catch(eror){
+    console.log("🚀 ~ TeamController ~ deleteTeam ~ eror:", eror)
+    
+  }
+ 
+}
 }
 
 export default new TeamController();

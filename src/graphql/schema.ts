@@ -10,13 +10,14 @@ export const typeDefs = gql`
     email: String
     token: String
     bio: String
+    avatar: String
   }
 
   type Game {
     id: String
     game_name: String
     game_cover_image: String
-    game_icon_image: String
+    game_icon: String
   }
   type Prize_pools {
     id: ID!
